@@ -1,0 +1,58 @@
+# defaults.yml — Repo-level pipeline defaults
+# Per-specimen overrides go in specimen_XX/config.yml
+# See tools/config.py for field documentation
+
+paths:
+  template_dir: vertebra_templates   # relative to repo root, or absolute
+  output_dir: analysis               # subdirectory of specimen_dir
+
+runtime:
+  debug: false                       # extra logging and intermediate file output
+  n_jobs: -3                         # joblib parallelism (-3 = all cores minus 2)
+  anatomic_axis: false               # use anatomic axis for error measurement
+  # exclude-screws: []              # screw names to exclude from analysis (e.g. [C7L, C7R])
+
+thresholds:
+  # metal_mask_threshold: auto       # HU threshold for postop metal mask (Otsu-based; set integer to override)
+  # screw_detect_threshold: auto (Otsu-based); set integer to override
+
+geometry:
+  preop_voxel-size: 0.5             # mm isotropic voxel size for preop CT
+
+# Orientation refinement (step 04)
+orient:
+  lam-rot: 3.0                        # Whittaker lambda for rotation smoothing
+  lam-trans: 0.001                     # Whittaker lambda for translation smoothing
+  lam-scale: 0.01                      # Whittaker lambda for scale smoothing
+
+# Product manifold filter (template matching)
+pmf:
+  sigma: 3.0
+  gamma: 0.7
+  iterations: 8
+  fmapper_target_size: 3200          # FunctionalMapper target_size
+  fmapper_preprocess_size: 3100      # preprocess_mesh target_size
+
+# Registration parameters
+registration:
+  # Articulated ICP
+  icp:
+    iso_res: 1.5                     # mm isotropic resolution for point clouds
+    initial_radius: 12.0             # mm initial distance threshold
+    ratio_thresh: 0.75               # acceptance ratio for ICP alignment
+
+  # Volumetric mutual-information refinement
+  volumetric:
+    preop_dilate: 4                  # dilation iterations for preop mask
+    postop_dilate: -2                # erosion iterations for postop mask (negative = erode)
+    quality_fail: -0.15              # MI metric below this = registration failure
+    quality_warn: -0.25              # MI metric below this = warning
+    n_jobs: -3                       # parallel jobs for volumetric registration (-3 = all cores minus 2)
+
+# Segmentation backend
+segmentation:
+  backend: totalseg                  # totalseg | inria
+  device: cpu                        # cpu | gpu | mps
+  fast: false                        # low-resolution mode for totalseg
+  inria_repo: null                   # path to Inria repo (null = default location)
+  inria_env: verse20                 # conda env for Inria segmentor

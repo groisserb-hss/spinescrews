@@ -1,0 +1,34 @@
+name: screws310
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy #=1.26
+  - pandas #
+  - pyarrow # not strictly required but pandas complains
+  - pip #=21.2.4
+  - scikit-learn #=0.24.2
+  - scipy #=1.7.1
+  - scikit-image #==0.18.3
+  - nibabel
+  - dipy
+  - transforms3d
+  - plyfile
+  - trimesh
+  - pyglet
+  - ipython
+  - tensorflow
+  - jax
+  - jaxlib
+  - openpyxl=3.1
+  - shapely
+  - cython
+  - python-igraph
+  - matplotlib
+  - pyyaml
+  - rtree
+  - pip:
+    - libigl  # on maxos arm64
+    - manifold3d
+    - triangle  # compile from source if necessary; make sure get both c files and python bindings

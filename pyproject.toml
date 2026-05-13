@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spinescrews"
+version = "0.1.0"
+description = "Pipeline for assessing pedicle screw placement accuracy in CT scans"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy", "scipy", "pandas",
+    "scikit-learn", "scikit-image",
+    "nibabel", "dipy",
+    "libigl", "trimesh", "plyfile", "manifold3d",
+    "triangle", "shapely", "rtree",
+    "matplotlib",
+    "tensorflow", "jax", "jaxlib",
+    "joblib", "tqdm", "transforms3d",
+    "openpyxl", "pyyaml", "python-igraph",
+    "heapdict", "cython",
+    "bg3dtools",
+    "PyMaxflow",
+    "cma",
+]
+
+[project.optional-dependencies]
+fast = ["embreex"]
+
+[project.scripts]
+spinescrews-align = "spinescrews.pipeline.align_vertebrae:main"
+spinescrews-preop = "spinescrews.pipeline.align_preop:main"
+spinescrews-postop = "spinescrews.pipeline.register_postop:main"
+spinescrews-accuracy = "spinescrews.pipeline.compute_accuracy:main"
+spinescrews-segment = "spinescrews.pipeline.run_segmentation:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["spinescrews*"]

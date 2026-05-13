@@ -1,0 +1,2 @@
+model_checkpoint_path: "T1_w75_h25_g18"
+all_model_checkpoint_paths: "T1_w75_h25_g18"

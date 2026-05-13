@@ -1,0 +1,466 @@
+================================================================================
+PRIOR CALIBRATION STATISTICS
+  Source: step05 (spine_tforms_initial.npz) vs step06_bkp (spine_tforms_icp.npz)
+  Date:   2026-04-28
+  Script: icp_vs_mi_delta3_full.py
+================================================================================
+
+================================================================================
+ABSOLUTE PER-LEVEL DELTAS
+  delta_k = inv(step05_k) @ step06_k
+  translation = ||delta[:3, 3]||
+  rotation = arccos(clip((trace(R)-1)/2, -1, 1))
+================================================================================
+
+Total vertebra levels: 513
+Specimens with data: 25
+
+--------------------------------------------------------------------------------
+Per-specimen summary (mean +/- std)
+--------------------------------------------------------------------------------
+  specimen_00      n=17  rot: 3.965+/-2.228 deg  trans: 3.659+/-1.022 mm
+  specimen_01      n=24  rot: 1.864+/-0.581 deg  trans: 2.504+/-1.381 mm
+  specimen_02      n=24  rot: 0.847+/-0.499 deg  trans: 2.276+/-0.856 mm
+  specimen_04      n=24  rot: 1.876+/-1.200 deg  trans: 2.780+/-1.917 mm
+  specimen_05      n=24  rot: 2.730+/-0.711 deg  trans: 3.859+/-2.222 mm
+  specimen_06      n=20  rot: 3.941+/-2.318 deg  trans: 2.470+/-1.481 mm
+  specimen_08      n=24  rot: 0.790+/-0.351 deg  trans: 3.307+/-1.935 mm
+  specimen_09      n=24  rot: 1.770+/-0.939 deg  trans: 3.022+/-2.246 mm
+  specimen_10      n=24  rot: 2.004+/-1.230 deg  trans: 2.950+/-1.407 mm
+  specimen_11      n=24  rot: 3.526+/-1.438 deg  trans: 2.249+/-1.077 mm
+  specimen_13      n=20  rot: 4.775+/-2.496 deg  trans: 4.918+/-1.979 mm
+  specimen_14      n=19  rot: 2.400+/-1.561 deg  trans: 4.286+/-1.331 mm
+  specimen_15      n= 8  rot: 6.426+/-3.687 deg  trans: 2.634+/-0.945 mm
+  specimen_16      n= 7  rot: 6.276+/-2.646 deg  trans: 1.868+/-0.605 mm
+  specimen_17      n=10  rot: 1.801+/-0.203 deg  trans: 1.972+/-1.392 mm
+  specimen_18      n=19  rot: 6.230+/-1.861 deg  trans: 4.253+/-2.147 mm
+  specimen_19      n=19  rot: 3.247+/-1.737 deg  trans: 2.021+/-1.287 mm
+  specimen_20      n=20  rot: 2.871+/-2.506 deg  trans: 2.172+/-1.451 mm
+  specimen_21      n=20  rot: 3.885+/-1.746 deg  trans: 4.786+/-2.384 mm
+  specimen_22      n=23  rot: 2.378+/-1.248 deg  trans: 2.184+/-1.061 mm
+  specimen_23      n=24  rot: 2.301+/-1.076 deg  trans: 1.769+/-0.987 mm
+  specimen_24      n=24  rot: 1.462+/-0.372 deg  trans: 2.739+/-1.341 mm
+  specimen_25      n=24  rot: 2.397+/-2.453 deg  trans: 3.722+/-1.734 mm
+  specimen_26      n=23  rot: 2.854+/-1.740 deg  trans: 2.315+/-1.623 mm
+  specimen_27      n=24  rot: 2.720+/-0.283 deg  trans: 5.229+/-1.999 mm
+
+--------------------------------------------------------------------------------
+Aggregate statistics (absolute)
+--------------------------------------------------------------------------------
+
+Absolute translation magnitude (mm):
+  Count: 513
+  Mean:  3.0816
+  Std:   1.9066
+  Min:   0.1920
+  Max:   12.6373
+  Percentiles:
+    P01: 0.3852
+    P02: 0.4696
+    P05: 0.8495
+    P10: 1.1481
+    P25: 1.6675
+    P50: 2.5502
+    P75: 4.1861
+    P90: 5.7159
+    P95: 6.5701
+    P98: 8.0309
+    P99: 8.8131
+
+Absolute rotation magnitude (degrees):
+  Count: 513
+  Mean:  2.7662
+  Std:   2.0733
+  Min:   0.3649
+  Max:   12.4664
+  Percentiles:
+    P01: 0.4287
+    P02: 0.4657
+    P05: 0.5758
+    P10: 0.7564
+    P25: 1.2909
+    P50: 2.1776
+    P75: 3.5045
+    P90: 5.4186
+    P95: 7.0372
+    P98: 9.1905
+    P99: 9.9677
+
+
+================================================================================
+DIFFERENTIAL (NEIGHBOR-TO-NEIGHBOR) DELTAS
+  delta_k = inv(step05_k) @ step06_k
+  diff    = inv(delta_i) @ delta_j  (i=caudal, j=cranial, adjacent)
+  IVD axis from step05 parent-to-child direction
+================================================================================
+
+Total adjacent pairs: 466
+Specimens with data: 25
+
+--------------------------------------------------------------------------------
+Per-specimen summary (mean +/- std)
+--------------------------------------------------------------------------------
+  specimen_00      n=15  rot: 3.348+/-2.526 deg  axial: 0.695+/-0.487 mm  perp: 1.225+/-0.669 mm
+  specimen_01      n=22  rot: 0.392+/-0.217 deg  axial: 0.267+/-0.293 mm  perp: 1.129+/-1.397 mm
+  specimen_02      n=22  rot: 0.200+/-0.166 deg  axial: 0.188+/-0.119 mm  perp: 0.518+/-0.622 mm
+  specimen_04      n=22  rot: 0.850+/-1.064 deg  axial: 0.318+/-0.367 mm  perp: 0.912+/-0.737 mm
+  specimen_05      n=22  rot: 1.491+/-1.277 deg  axial: 0.497+/-0.365 mm  perp: 1.778+/-1.474 mm
+  specimen_06      n=18  rot: 3.279+/-2.384 deg  axial: 0.731+/-0.580 mm  perp: 1.124+/-0.523 mm
+  specimen_08      n=22  rot: 0.252+/-0.116 deg  axial: 0.251+/-0.151 mm  perp: 0.738+/-0.552 mm
+  specimen_09      n=22  rot: 0.988+/-1.245 deg  axial: 0.364+/-0.349 mm  perp: 1.084+/-0.954 mm
+  specimen_10      n=22  rot: 1.424+/-1.422 deg  axial: 0.409+/-0.353 mm  perp: 1.129+/-0.549 mm
+  specimen_11      n=22  rot: 3.132+/-2.072 deg  axial: 0.554+/-0.406 mm  perp: 1.219+/-0.617 mm
+  specimen_13      n=18  rot: 1.455+/-1.684 deg  axial: 0.370+/-0.520 mm  perp: 1.687+/-1.497 mm
+  specimen_14      n=17  rot: 1.059+/-1.475 deg  axial: 0.265+/-0.215 mm  perp: 0.579+/-0.372 mm
+  specimen_15      n= 7  rot: 9.079+/-6.393 deg  axial: 1.457+/-0.980 mm  perp: 1.587+/-0.761 mm
+  specimen_16      n= 6  rot: 8.624+/-4.706 deg  axial: 1.300+/-0.763 mm  perp: 1.926+/-0.752 mm
+  specimen_17      n= 9  rot: 0.335+/-0.127 deg  axial: 0.063+/-0.046 mm  perp: 0.853+/-0.292 mm
+  specimen_18      n=17  rot: 2.620+/-2.883 deg  axial: 0.416+/-0.320 mm  perp: 1.731+/-1.028 mm
+  specimen_19      n=17  rot: 2.129+/-2.576 deg  axial: 0.436+/-0.302 mm  perp: 0.916+/-0.561 mm
+  specimen_20      n=19  rot: 2.196+/-2.632 deg  axial: 0.560+/-0.838 mm  perp: 1.113+/-0.937 mm
+  specimen_21      n=18  rot: 2.112+/-2.640 deg  axial: 0.814+/-1.114 mm  perp: 1.503+/-0.848 mm
+  specimen_22      n=20  rot: 0.550+/-0.208 deg  axial: 0.187+/-0.184 mm  perp: 1.217+/-1.123 mm
+  specimen_23      n=22  rot: 0.356+/-0.150 deg  axial: 0.149+/-0.096 mm  perp: 0.510+/-0.417 mm
+  specimen_24      n=22  rot: 0.270+/-0.101 deg  axial: 0.270+/-0.204 mm  perp: 0.667+/-0.957 mm
+  specimen_25      n=22  rot: 1.872+/-2.503 deg  axial: 0.674+/-0.919 mm  perp: 1.047+/-0.828 mm
+  specimen_26      n=21  rot: 2.223+/-2.207 deg  axial: 0.510+/-0.771 mm  perp: 1.162+/-0.728 mm
+  specimen_27      n=22  rot: 0.551+/-0.280 deg  axial: 0.462+/-0.474 mm  perp: 2.204+/-1.616 mm
+
+--------------------------------------------------------------------------------
+Aggregate statistics (differential)
+--------------------------------------------------------------------------------
+
+Differential rotation magnitude (degrees):
+  Count: 466
+  Mean:  1.6074
+  Std:   2.4733
+  Min:   0.0254
+  Max:   21.2770
+  Percentiles:
+    P01: 0.0719
+    P02: 0.0911
+    P05: 0.1346
+    P10: 0.1792
+    P25: 0.2778
+    P50: 0.4878
+    P75: 2.1030
+    P90: 4.5323
+    P95: 6.7337
+    P98: 8.7315
+    P99: 11.0256
+
+Differential axial translation (IVD direction) (mm):
+  Count: 466
+  Mean:  0.4386
+  Std:   0.5626
+  Min:   0.0025
+  Max:   4.7161
+  Percentiles:
+    P01: 0.0083
+    P02: 0.0134
+    P05: 0.0229
+    P10: 0.0370
+    P25: 0.1046
+    P50: 0.2436
+    P75: 0.5492
+    P90: 1.0734
+    P95: 1.4276
+    P98: 2.3411
+    P99: 2.8514
+
+Differential perpendicular translation (mm):
+  Count: 466
+  Mean:  1.1495
+  Std:   1.0237
+  Min:   0.0327
+  Max:   7.3219
+  Percentiles:
+    P01: 0.0888
+    P02: 0.1251
+    P05: 0.1824
+    P10: 0.2790
+    P25: 0.4534
+    P50: 0.8574
+    P75: 1.5329
+    P90: 2.2467
+    P95: 2.8571
+    P98: 3.9906
+    P99: 5.4056
+
+Differential total translation magnitude (cross-check) (mm):
+  Count: 466
+  Mean:  1.3007
+  Std:   1.0892
+  Min:   0.0811
+  Max:   7.3714
+  Percentiles:
+    P01: 0.1495
+    P02: 0.1815
+    P05: 0.2523
+    P10: 0.3431
+    P25: 0.5471
+    P50: 0.9976
+    P75: 1.7334
+    P90: 2.4986
+    P95: 3.3065
+    P98: 4.4544
+    P99: 5.5044
+
+Axial fraction of total translation: mean=0.353, median=0.282
+
+--------------------------------------------------------------------------------
+Outliers (axial > 1mm OR perp > 1mm OR rot > 1 deg)
+--------------------------------------------------------------------------------
+  specimen_27     L4  -L3    rot=0.336deg  axial=2.087mm  perp=7.065mm
+  specimen_13     LS  -L5    rot=0.187deg  axial=2.153mm  perp=6.744mm
+  specimen_05     C3  -C2    rot=0.157deg  axial=0.853mm  perp=7.322mm
+  specimen_01     C5  -C4    rot=0.417deg  axial=0.489mm  perp=6.969mm
+  specimen_27     L3  -L2    rot=0.262deg  axial=1.476mm  perp=5.978mm
+  specimen_25     C4  -C3    rot=8.941deg  axial=2.975mm  perp=3.827mm
+  specimen_20     T3  -T2    rot=6.357deg  axial=2.830mm  perp=3.487mm
+  specimen_21     T1  -C7    rot=5.582deg  axial=4.716mm  perp=1.439mm
+  specimen_22     T2  -T1    rot=0.282deg  axial=0.753mm  perp=5.098mm
+  specimen_16     C7  -C6    rot=8.627deg  axial=2.425mm  perp=3.228mm
+  specimen_24     C6  -C5    rot=0.213deg  axial=0.853mm  perp=4.700mm
+  specimen_15     C5  -C4    rot=13.158deg  axial=2.891mm  perp=2.080mm
+  specimen_21     T2  -T1    rot=8.293deg  axial=2.422mm  perp=2.456mm
+  specimen_25     C5  -C4    rot=5.133deg  axial=3.707mm  perp=1.036mm
+  specimen_26     C4  -C3    rot=5.983deg  axial=3.166mm  perp=1.559mm
+  specimen_13     L4  -L3    rot=4.806deg  axial=0.834mm  perp=3.846mm
+  specimen_18     LS  -L5    rot=0.699deg  axial=0.112mm  perp=4.368mm
+  specimen_05     C6  -C5    rot=0.140deg  axial=0.305mm  perp=4.062mm
+  specimen_15     C6  -C5    rot=21.277deg  axial=1.694mm  perp=2.600mm
+  specimen_05     L4  -L3    rot=3.147deg  axial=0.731mm  perp=3.445mm
+  specimen_09     C5  -C4    rot=0.366deg  axial=0.114mm  perp=4.053mm
+  specimen_22     T1  -C7    rot=0.314deg  axial=0.523mm  perp=3.618mm
+  specimen_27     LS  -L5    rot=0.411deg  axial=0.620mm  perp=3.512mm
+  specimen_16     C6  -C5    rot=12.791deg  axial=2.126mm  perp=1.854mm
+  specimen_26     C5  -C4    rot=5.648deg  axial=2.017mm  perp=1.938mm
+  specimen_04     T3  -T2    rot=2.664deg  axial=0.582mm  perp=3.307mm
+  specimen_09     C4  -C3    rot=0.312deg  axial=0.810mm  perp=3.047mm
+  specimen_10     T5  -T4    rot=2.114deg  axial=1.381mm  perp=2.434mm
+  specimen_15     C7  -C6    rot=3.199deg  axial=2.468mm  perp=1.272mm
+  specimen_20     LS  -L5    rot=1.248deg  axial=0.503mm  perp=3.080mm
+  specimen_27     T10 -T9    rot=0.510deg  axial=0.127mm  perp=3.455mm
+  specimen_16     C4  -C3    rot=13.295deg  axial=1.323mm  perp=2.160mm
+  specimen_18     L5  -L4    rot=1.124deg  axial=0.437mm  perp=2.998mm
+  specimen_27     L5  -L4    rot=0.330deg  axial=0.844mm  perp=2.536mm
+  specimen_26     C6  -C5    rot=6.323deg  axial=1.336mm  perp=1.977mm
+  specimen_06     T3  -T2    rot=2.996deg  axial=1.843mm  perp=1.465mm
+  specimen_27     T12 -T11   rot=0.286deg  axial=0.550mm  perp=2.734mm
+  specimen_13     T3  -T2    rot=4.463deg  axial=1.170mm  perp=2.103mm
+  specimen_21     L3  -L2    rot=0.566deg  axial=0.835mm  perp=2.422mm
+  specimen_00     L4  -L3    rot=3.385deg  axial=0.427mm  perp=2.806mm
+  specimen_02     C5  -C4    rot=0.097deg  axial=0.328mm  perp=2.874mm
+  specimen_11     T1  -C7    rot=2.896deg  axial=1.483mm  perp=1.714mm
+  specimen_21     C7  -C6    rot=0.225deg  axial=0.669mm  perp=2.525mm
+  specimen_20     T4  -T3    rot=3.054deg  axial=2.746mm  perp=0.446mm
+  specimen_21     T5  -T4    rot=3.047deg  axial=0.042mm  perp=3.141mm
+  specimen_09     C3  -C2    rot=0.291deg  axial=1.312mm  perp=1.827mm
+  specimen_20     L5  -L4    rot=4.176deg  axial=1.078mm  perp=2.053mm
+  specimen_26     C3  -C2    rot=0.494deg  axial=0.560mm  perp=2.516mm
+  specimen_25     T6  -T5    rot=3.539deg  axial=1.335mm  perp=1.731mm
+  specimen_11     T8  -T7    rot=4.790deg  axial=0.322mm  perp=2.738mm
+  specimen_00     T8  -T7    rot=5.362deg  axial=1.035mm  perp=1.994mm
+  specimen_18     T7  -T6    rot=4.658deg  axial=0.299mm  perp=2.682mm
+  specimen_19     T8  -T7    rot=2.575deg  axial=0.973mm  perp=1.970mm
+  specimen_18     L4  -L3    rot=1.041deg  axial=0.621mm  perp=2.304mm
+  specimen_27     C7  -C6    rot=0.836deg  axial=0.349mm  perp=2.554mm
+  specimen_27     L2  -L1    rot=0.362deg  axial=0.719mm  perp=2.181mm
+  specimen_11     L3  -L2    rot=2.380deg  axial=0.750mm  perp=2.099mm
+  specimen_18     T3  -T2    rot=0.722deg  axial=0.322mm  perp=2.514mm
+  specimen_11     L5  -L4    rot=3.955deg  axial=0.581mm  perp=2.251mm
+  specimen_09     L5  -L4    rot=3.650deg  axial=0.903mm  perp=1.922mm
+  specimen_05     T10 -T9    rot=1.545deg  axial=1.466mm  perp=1.312mm
+  specimen_21     L5  -L4    rot=0.286deg  axial=0.189mm  perp=2.546mm
+  specimen_06     L5  -L4    rot=3.576deg  axial=1.777mm  perp=0.955mm
+  specimen_21     T3  -T2    rot=8.357deg  axial=1.069mm  perp=1.652mm
+  specimen_10     C5  -C4    rot=0.484deg  axial=0.334mm  perp=2.373mm
+  specimen_18     T2  -T1    rot=7.199deg  axial=0.367mm  perp=2.337mm
+  specimen_08     C7  -C6    rot=0.243deg  axial=0.294mm  perp=2.370mm
+  specimen_16     C3  -C2    rot=4.371deg  axial=0.440mm  perp=2.221mm
+  specimen_00     T3  -T2    rot=4.449deg  axial=1.317mm  perp=1.338mm
+  specimen_19     T3  -T2    rot=3.244deg  axial=0.553mm  perp=2.084mm
+  specimen_11     T12 -T11   rot=7.197deg  axial=0.628mm  perp=1.991mm
+  specimen_27     T9  -T8    rot=0.600deg  axial=0.157mm  perp=2.459mm
+  specimen_04     T4  -T3    rot=4.232deg  axial=0.656mm  perp=1.956mm
+  specimen_18     T4  -T3    rot=3.919deg  axial=1.388mm  perp=1.220mm
+  specimen_05     C7  -C6    rot=0.115deg  axial=0.266mm  perp=2.324mm
+  specimen_13     L2  -L1    rot=0.880deg  axial=0.379mm  perp=2.186mm
+  specimen_20     T1  -C7    rot=0.502deg  axial=0.117mm  perp=2.441mm
+  specimen_01     L5  -L4    rot=1.254deg  axial=0.552mm  perp=1.938mm
+  specimen_00     T5  -T4    rot=3.150deg  axial=1.255mm  perp=1.233mm
+  specimen_06     T6  -T5    rot=5.270deg  axial=0.832mm  perp=1.644mm
+  specimen_25     T9  -T8    rot=0.910deg  axial=0.666mm  perp=1.805mm
+  specimen_13     L3  -L2    rot=0.749deg  axial=0.224mm  perp=2.242mm
+  specimen_11     L4  -L3    rot=2.525deg  axial=1.435mm  perp=1.028mm
+  specimen_00     T6  -T5    rot=7.069deg  axial=0.960mm  perp=1.503mm
+  specimen_11     T10 -T9    rot=2.602deg  axial=1.081mm  perp=1.377mm
+  specimen_08     LS  -L5    rot=0.072deg  axial=0.270mm  perp=2.188mm
+  specimen_10     C4  -C3    rot=0.505deg  axial=0.582mm  perp=1.869mm
+  specimen_20     T2  -T1    rot=10.150deg  axial=1.126mm  perp=1.296mm
+  specimen_04     C4  -C3    rot=0.614deg  axial=0.723mm  perp=1.693mm
+  specimen_01     C6  -C5    rot=0.474deg  axial=0.424mm  perp=1.985mm
+  specimen_19     T7  -T6    rot=7.933deg  axial=1.078mm  perp=1.320mm
+  specimen_09     T1  -C7    rot=1.619deg  axial=0.965mm  perp=1.425mm
+  specimen_26     L2  -L1    rot=4.221deg  axial=0.003mm  perp=2.383mm
+  specimen_18     L3  -L2    rot=0.882deg  axial=0.688mm  perp=1.693mm
+  specimen_05     L5  -L4    rot=1.078deg  axial=0.808mm  perp=1.550mm
+  specimen_21     L4  -L3    rot=0.742deg  axial=0.476mm  perp=1.863mm
+  specimen_27     T1  -C7    rot=0.743deg  axial=0.295mm  perp=2.030mm
+  specimen_06     L2  -L1    rot=3.239deg  axial=0.768mm  perp=1.547mm
+  specimen_25     LS  -L5    rot=0.593deg  axial=0.139mm  perp=2.176mm
+  specimen_21     L2  -L1    rot=0.613deg  axial=0.766mm  perp=1.533mm
+  specimen_15     T1  -C7    rot=7.686deg  axial=0.219mm  perp=2.062mm
+  specimen_00     L5  -L4    rot=3.211deg  axial=1.474mm  perp=0.795mm
+  specimen_06     T1  -C7    rot=0.318deg  axial=0.212mm  perp=2.056mm
+  specimen_06     L4  -L3    rot=0.312deg  axial=0.024mm  perp=2.241mm
+  specimen_26     L5  -L4    rot=0.833deg  axial=0.108mm  perp=2.148mm
+  specimen_05     T1  -C7    rot=0.190deg  axial=0.298mm  perp=1.946mm
+  specimen_00     L3  -L2    rot=0.461deg  axial=0.423mm  perp=1.811mm
+  specimen_21     LS  -L5    rot=0.271deg  axial=0.087mm  perp=2.123mm
+  specimen_26     L3  -L2    rot=3.408deg  axial=0.135mm  perp=2.075mm
+  specimen_25     T8  -T7    rot=3.419deg  axial=1.354mm  perp=0.830mm
+  specimen_13     L5  -L4    rot=4.578deg  axial=0.127mm  perp=2.045mm
+  specimen_11     LS  -L5    rot=4.427deg  axial=0.674mm  perp=1.481mm
+  specimen_25     L5  -L4    rot=0.672deg  axial=0.023mm  perp=2.131mm
+  specimen_14     T3  -T2    rot=4.210deg  axial=0.921mm  perp=1.226mm
+  specimen_15     C3  -C2    rot=10.483deg  axial=1.684mm  perp=0.463mm
+  specimen_05     C4  -C3    rot=0.143deg  axial=0.779mm  perp=1.366mm
+  specimen_00     T7  -T6    rot=8.288deg  axial=1.405mm  perp=0.736mm
+  specimen_16     T1  -C7    rot=0.624deg  axial=1.046mm  perp=1.092mm
+  specimen_05     T11 -T10   rot=2.608deg  axial=1.178mm  perp=0.953mm
+  specimen_05     C5  -C4    rot=0.178deg  axial=0.598mm  perp=1.533mm
+  specimen_15     T2  -T1    rot=0.133deg  axial=0.071mm  perp=2.039mm
+  specimen_27     T11 -T10   rot=0.356deg  axial=0.330mm  perp=1.777mm
+  specimen_04     C7  -C6    rot=1.304deg  axial=1.014mm  perp=1.091mm
+  specimen_01     LS  -L5    rot=0.640deg  axial=0.092mm  perp=1.998mm
+  specimen_13     T2  -T1    rot=4.486deg  axial=0.481mm  perp=1.579mm
+  specimen_23     LS  -L5    rot=0.504deg  axial=0.146mm  perp=1.893mm
+  specimen_21     T6  -T5    rot=2.667deg  axial=1.341mm  perp=0.694mm
+  specimen_09     T3  -T2    rot=3.024deg  axial=0.190mm  perp=1.841mm
+  specimen_18     T1  -C7    rot=0.156deg  axial=0.053mm  perp=1.973mm
+  specimen_06     T9  -T8    rot=4.623deg  axial=1.312mm  perp=0.708mm
+  specimen_06     LS  -L5    rot=2.534deg  axial=1.521mm  perp=0.492mm
+  specimen_18     T5  -T4    rot=8.041deg  axial=0.452mm  perp=1.555mm
+  specimen_22     T4  -T3    rot=0.346deg  axial=0.175mm  perp=1.823mm
+  specimen_26     T5  -T4    rot=2.382deg  axial=0.721mm  perp=1.234mm
+  specimen_06     C7  -C6    rot=0.400deg  axial=0.614mm  perp=1.336mm
+  specimen_21     T4  -T3    rot=4.038deg  axial=0.948mm  perp=1.002mm
+  specimen_18     L2  -L1    rot=0.703deg  axial=0.582mm  perp=1.367mm
+  specimen_27     T5  -T4    rot=0.514deg  axial=0.273mm  perp=1.668mm
+  specimen_11     C3  -C2    rot=0.530deg  axial=0.549mm  perp=1.392mm
+  specimen_02     C4  -C3    rot=0.107deg  axial=0.216mm  perp=1.721mm
+  specimen_19     T1  -C7    rot=0.379deg  axial=0.403mm  perp=1.524mm
+  specimen_05     T7  -T6    rot=3.527deg  axial=0.375mm  perp=1.552mm
+  specimen_27     C3  -C2    rot=0.991deg  axial=0.172mm  perp=1.755mm
+  specimen_06     T11 -T10   rot=6.705deg  axial=0.785mm  perp=1.138mm
+  specimen_10     T6  -T5    rot=2.069deg  axial=1.214mm  perp=0.705mm
+  specimen_05     T3  -T2    rot=3.810deg  axial=0.246mm  perp=1.656mm
+  specimen_01     T4  -T3    rot=0.359deg  axial=0.084mm  perp=1.813mm
+  specimen_24     C7  -C6    rot=0.189deg  axial=0.557mm  perp=1.323mm
+  specimen_10     T4  -T3    rot=2.855deg  axial=0.715mm  perp=1.160mm
+  specimen_04     T1  -C7    rot=0.925deg  axial=0.084mm  perp=1.786mm
+  specimen_04     C6  -C5    rot=0.742deg  axial=1.155mm  perp=0.712mm
+  specimen_10     L4  -L3    rot=2.258deg  axial=0.306mm  perp=1.540mm
+  specimen_11     T3  -T2    rot=5.696deg  axial=0.515mm  perp=1.322mm
+  specimen_26     T12 -T11   rot=5.104deg  axial=0.811mm  perp=1.015mm
+  specimen_06     T12 -T11   rot=8.894deg  axial=0.467mm  perp=1.355mm
+  specimen_00     T12 -T11   rot=0.615deg  axial=0.093mm  perp=1.728mm
+  specimen_11     L2  -L1    rot=4.432deg  axial=1.182mm  perp=0.631mm
+  specimen_05     T12 -T11   rot=1.762deg  axial=0.140mm  perp=1.643mm
+  specimen_15     C4  -C3    rot=7.620deg  axial=1.172mm  perp=0.590mm
+  specimen_04     C3  -C2    rot=0.502deg  axial=0.469mm  perp=1.286mm
+  specimen_27     T8  -T7    rot=0.394deg  axial=0.017mm  perp=1.731mm
+  specimen_09     LS  -L5    rot=3.890deg  axial=0.397mm  perp=1.347mm
+  specimen_10     C6  -C5    rot=0.442deg  axial=0.015mm  perp=1.722mm
+  specimen_18     T8  -T7    rot=8.776deg  axial=0.556mm  perp=1.170mm
+  specimen_13     C7  -C6    rot=0.218deg  axial=0.081mm  perp=1.644mm
+  specimen_09     T2  -T1    rot=3.621deg  axial=0.759mm  perp=0.927mm
+  specimen_24     LS  -L5    rot=0.352deg  axial=0.135mm  perp=1.544mm
+  specimen_05     T2  -T1    rot=2.595deg  axial=0.518mm  perp=1.138mm
+  specimen_00     L2  -L1    rot=0.615deg  axial=0.372mm  perp=1.280mm
+  specimen_26     T6  -T5    rot=4.000deg  axial=0.561mm  perp=1.084mm
+  specimen_19     T4  -T3    rot=1.639deg  axial=0.785mm  perp=0.853mm
+  specimen_27     T2  -T1    rot=0.349deg  axial=0.261mm  perp=1.375mm
+  specimen_14     T6  -T5    rot=0.419deg  axial=0.419mm  perp=1.209mm
+  specimen_11     T5  -T4    rot=3.623deg  axial=0.373mm  perp=1.255mm
+  specimen_13     T12 -T11   rot=0.738deg  axial=0.235mm  perp=1.351mm
+  specimen_00     T2  -T1    rot=3.578deg  axial=0.564mm  perp=1.016mm
+  specimen_04     C5  -C4    rot=0.716deg  axial=1.059mm  perp=0.502mm
+  specimen_06     T4  -T3    rot=6.112deg  axial=1.123mm  perp=0.434mm
+  specimen_20     T5  -T4    rot=5.889deg  axial=0.322mm  perp=1.233mm
+  specimen_13     T4  -T3    rot=0.326deg  axial=0.235mm  perp=1.317mm
+  specimen_25     T5  -T4    rot=1.501deg  axial=0.203mm  perp=1.345mm
+  specimen_09     L4  -L3    rot=0.525deg  axial=0.341mm  perp=1.204mm
+  specimen_18     T6  -T5    rot=0.353deg  axial=0.265mm  perp=1.263mm
+  specimen_10     L3  -L2    rot=0.399deg  axial=0.029mm  perp=1.498mm
+  specimen_27     C5  -C4    rot=0.918deg  axial=0.240mm  perp=1.280mm
+  specimen_10     T2  -T1    rot=3.649deg  axial=0.624mm  perp=0.896mm
+  specimen_19     T6  -T5    rot=0.157deg  axial=0.189mm  perp=1.323mm
+  specimen_05     LS  -L5    rot=0.602deg  axial=0.391mm  perp=1.115mm
+  specimen_26     T1  -C7    rot=0.364deg  axial=0.207mm  perp=1.288mm
+  specimen_05     T8  -T7    rot=2.570deg  axial=0.827mm  perp=0.658mm
+  specimen_10     T7  -T6    rot=5.027deg  axial=0.368mm  perp=1.104mm
+  specimen_05     L3  -L2    rot=0.327deg  axial=0.029mm  perp=1.443mm
+  specimen_24     L5  -L4    rot=0.262deg  axial=0.319mm  perp=1.148mm
+  specimen_10     L2  -L1    rot=1.680deg  axial=0.648mm  perp=0.816mm
+  specimen_11     C5  -C4    rot=0.444deg  axial=0.244mm  perp=1.209mm
+  specimen_19     T5  -T4    rot=0.145deg  axial=0.282mm  perp=1.171mm
+  specimen_19     T10 -T9    rot=4.470deg  axial=0.664mm  perp=0.787mm
+  specimen_19     T2  -T1    rot=2.797deg  axial=0.613mm  perp=0.834mm
+  specimen_06     L3  -L2    rot=3.110deg  axial=0.463mm  perp=0.975mm
+  specimen_16     C5  -C4    rot=12.034deg  axial=0.439mm  perp=1.000mm
+  specimen_17     C3  -C2    rot=0.545deg  axial=0.168mm  perp=1.261mm
+  specimen_23     C7  -C6    rot=0.374deg  axial=0.193mm  perp=1.236mm
+  specimen_22     LS  -L5    rot=1.026deg  axial=0.028mm  perp=1.374mm
+  specimen_10     T8  -T7    rot=1.441deg  axial=0.402mm  perp=0.998mm
+  specimen_00     T4  -T3    rot=6.743deg  axial=0.190mm  perp=1.171mm
+  specimen_08     T1  -C7    rot=0.439deg  axial=0.252mm  perp=1.108mm
+  specimen_05     T9  -T8    rot=2.370deg  axial=0.039mm  perp=1.311mm
+  specimen_04     LS  -L5    rot=0.126deg  axial=0.090mm  perp=1.233mm
+  specimen_23     L5  -L4    rot=0.554deg  axial=0.284mm  perp=1.014mm
+  specimen_10     L5  -L4    rot=1.558deg  axial=0.237mm  perp=1.058mm
+  specimen_11     T9  -T8    rot=5.820deg  axial=0.338mm  perp=0.954mm
+  specimen_10     T3  -T2    rot=4.412deg  axial=0.376mm  perp=0.904mm
+  specimen_14     T4  -T3    rot=4.473deg  axial=0.436mm  perp=0.829mm
+  specimen_05     T6  -T5    rot=3.493deg  axial=0.333mm  perp=0.914mm
+  specimen_01     C4  -C3    rot=0.461deg  axial=1.043mm  perp=0.204mm
+  specimen_05     T5  -T4    rot=1.221deg  axial=0.315mm  perp=0.931mm
+  specimen_11     T6  -T5    rot=4.957deg  axial=0.549mm  perp=0.691mm
+  specimen_06     T2  -T1    rot=3.065deg  axial=0.985mm  perp=0.251mm
+  specimen_18     T9  -T8    rot=4.673deg  axial=0.626mm  perp=0.597mm
+  specimen_22     T3  -T2    rot=0.163deg  axial=0.014mm  perp=1.205mm
+  specimen_13     T5  -T4    rot=0.379deg  axial=0.155mm  perp=1.044mm
+  specimen_11     T7  -T6    rot=1.440deg  axial=0.336mm  perp=0.847mm
+  specimen_17     T4  -T3    rot=0.137deg  axial=0.025mm  perp=1.153mm
+  specimen_27     T7  -T6    rot=0.433deg  axial=0.055mm  perp=1.117mm
+  specimen_11     T2  -T1    rot=0.117deg  axial=0.019mm  perp=1.149mm
+  specimen_06     T10 -T9    rot=0.262deg  axial=0.023mm  perp=1.144mm
+  specimen_02     LS  -L5    rot=0.573deg  axial=0.135mm  perp=1.029mm
+  specimen_17     T1  -C7    rot=0.306deg  axial=0.040mm  perp=1.112mm
+  specimen_01     T1  -C7    rot=0.334deg  axial=0.139mm  perp=1.007mm
+  specimen_27     C4  -C3    rot=1.285deg  axial=0.302mm  perp=0.840mm
+  specimen_06     T7  -T6    rot=3.373deg  axial=0.283mm  perp=0.839mm
+  specimen_10     LS  -L5    rot=0.105deg  axial=0.031mm  perp=1.086mm
+  specimen_01     L4  -L3    rot=0.169deg  axial=0.071mm  perp=1.039mm
+  specimen_20     L4  -L3    rot=3.121deg  axial=0.890mm  perp=0.216mm
+  specimen_04     T2  -T1    rot=3.215deg  axial=0.036mm  perp=1.069mm
+  specimen_25     T1  -C7    rot=1.035deg  axial=0.543mm  perp=0.554mm
+  specimen_26     T7  -T6    rot=4.310deg  axial=0.233mm  perp=0.856mm
+  specimen_22     L5  -L4    rot=0.918deg  axial=0.072mm  perp=1.014mm
+  specimen_25     C3  -C2    rot=8.274deg  axial=0.709mm  perp=0.375mm
+  specimen_19     T9  -T8    rot=8.435deg  axial=0.659mm  perp=0.417mm
+  specimen_11     T4  -T3    rot=4.379deg  axial=0.449mm  perp=0.626mm
+  specimen_20     T7  -T6    rot=1.335deg  axial=0.157mm  perp=0.916mm
+  specimen_22     C7  -C6    rot=0.457deg  axial=0.025mm  perp=1.015mm
+  specimen_20     T12 -T11   rot=1.274deg  axial=0.234mm  perp=0.798mm
+  specimen_06     T5  -T4    rot=3.961deg  axial=0.083mm  perp=0.920mm
+  specimen_00     T9  -T8    rot=2.256deg  axial=0.686mm  perp=0.254mm
+  specimen_25     T7  -T6    rot=2.890deg  axial=0.193mm  perp=0.706mm
+  specimen_20     T10 -T9    rot=1.418deg  axial=0.144mm  perp=0.727mm
+  specimen_11     T11 -T10   rot=5.188deg  axial=0.160mm  perp=0.578mm
+  specimen_27     C6  -C5    rot=1.003deg  axial=0.075mm  perp=0.571mm
+  specimen_05     L2  -L1    rot=1.097deg  axial=0.399mm  perp=0.206mm
+  specimen_19     T12 -T11   rot=2.706deg  axial=0.177mm  perp=0.362mm
+  specimen_14     T7  -T6    rot=4.001deg  axial=0.206mm  perp=0.280mm

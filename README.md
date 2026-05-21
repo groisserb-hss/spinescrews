@@ -16,13 +16,6 @@ conda env create --file environment.yml
 conda activate screws310
 ```
 
-If `triangle` fails to install via pip, build from source:
-
-```bash
-git clone --recurse-submodules https://github.com/drufat/triangle.git
-cd triangle && python setup.py install
-```
-
 ### 2. bg3dtools
 
 Install [bg3dtools](https://github.com/bgroisser/bg3dtools) (provides the

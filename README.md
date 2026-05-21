@@ -189,4 +189,8 @@ python -m spinescrews.figures.visualize_breach /path/to/specimen_XX --level T11 
 
 ## License
 
-TBD
+Copyright 2026 Hospital for Special Surgery.
+
+Released under the [PolyForm Noncommercial License 1.0.0](LICENSE) — free for research, education, and other noncommercial use; commercial use requires a separate license. See [LICENSE](LICENSE) for the full terms.
+
+Note: the optional Inria `vertebrae_segmentation` backend (`tools/inria_segmentor/`) is separately licensed under CC-BY-NC-SA and is fetched at setup time via `setup.sh`; the optional TotalSegmentator backend is Apache-2.0. Neither is bundled in this repository.

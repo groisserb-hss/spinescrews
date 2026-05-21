@@ -21,7 +21,7 @@ src/spinescrews/tools/totalseg_segmentor/config.json
 .DS_Store
 
 # per-machine Claude Code settings
-.claude/settings.local.json
+**/.claude/settings.local.json
 
 # compiled python
 *.pyc

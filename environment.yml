@@ -16,14 +16,9 @@ dependencies:
   - transforms3d
   - plyfile
   - trimesh
-  - pyglet
   - ipython
-  - tensorflow
-  - jax
-  - jaxlib
   - openpyxl=3.1
   - shapely
-  - cython
   - python-igraph
   - matplotlib
   - pyyaml
@@ -31,4 +26,3 @@ dependencies:
   - pip:
     - libigl  # on maxos arm64
     - manifold3d
-    - triangle  # compile from source if necessary; make sure get both c files and python bindings

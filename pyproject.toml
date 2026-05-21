@@ -13,12 +13,10 @@ dependencies = [
     "scikit-learn", "scikit-image",
     "nibabel", "dipy",
     "libigl", "trimesh", "plyfile", "manifold3d",
-    "triangle", "shapely", "rtree",
+    "shapely", "rtree",
     "matplotlib",
-    "tensorflow", "jax", "jaxlib",
     "joblib", "tqdm", "transforms3d",
     "openpyxl", "pyyaml", "python-igraph",
-    "heapdict", "cython",
     "bg3dtools",
     "PyMaxflow",
     "cma",
@@ -26,6 +24,7 @@ dependencies = [
 
 [project.optional-dependencies]
 fast = ["embreex"]
+templates = ["tensorflow", "jax", "jaxlib"]
 
 [project.scripts]
 spinescrews-align = "spinescrews.pipeline.align_vertebrae:main"

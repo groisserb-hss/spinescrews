@@ -231,6 +231,11 @@ def load_config(specimen_dir, overrides=None):
     # specimen_dir is always authoritative
     kwargs['specimen_dir'] = expanduser(specimen_dir)
 
+    # resolve template_dir relative to repo root (defaults.yml documents this)
+    td = kwargs.get('template_dir', '')
+    if td and not os.path.isabs(expanduser(td)):
+        kwargs['template_dir'] = join(_REPO_ROOT, td)
+
     kwargs = _coerce_tuples(kwargs)
     config = PipelineConfig(**kwargs)
     _validate(config)

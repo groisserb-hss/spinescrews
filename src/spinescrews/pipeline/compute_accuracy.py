@@ -494,8 +494,14 @@ def main():
     import argparse
     from spinescrews.tools.config import load_config, save_resolved_config
 
-    parser = argparse.ArgumentParser(description='Compute screw placement accuracy.')
-    parser.add_argument('specimen_dir', type=str)
+    parser = argparse.ArgumentParser(
+        description='Compute screw placement accuracy (step 07): entry/tip positional errors, '
+                    'pedicle breach distances, and angular deviations of detected vs planned '
+                    'screws. Requires a completed registration (run spinescrews-postop or '
+                    'spinescrews-align first). Writes analysis/07_accuracy/results.csv.')
+    parser.add_argument('specimen_dir',
+                        help='Specimen directory with a completed pipeline run; reads '
+                             '<specimen_dir>/analysis/ and writes analysis/07_accuracy/.')
     args = parser.parse_args()
 
     config = load_config(args.specimen_dir)

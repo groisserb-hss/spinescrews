@@ -36,7 +36,7 @@ This will:
 
 ```bash
 conda activate screws310
-python tools/run_segmentation.py --backend totalseg --input <nifti> --output_dir <dir>
+spinescrews-segment --backend totalseg --input <nifti> --output_dir <dir>
 ```
 
 ### Options

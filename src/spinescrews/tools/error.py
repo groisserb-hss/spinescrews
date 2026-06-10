@@ -1,3 +1,11 @@
+"""Screw-placement error and pedicle-breach measurements.
+
+Given a detected screw and the segmented vertebra it instruments, computes entry/tip positional
+errors, angular deviations, and signed distances to the pedicle wall (`measure_screw_error`,
+`distance_to_pedicle`, `breached_distance`), classifying breaches as medial or lateral from the
+bone-contour normals.
+"""
+
 import logging
 import os
 

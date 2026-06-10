@@ -1,3 +1,10 @@
+"""Metal pedicle-screw detection in the postop CT.
+
+`detect_screws()` localizes each implanted screw: RANSAC/ICP initialization, articulated-spine
+optimization, per-screw point-cloud fitting, and a final HU-weighted refinement of each screw's
+axis and endpoints.
+"""
+
 from __future__ import annotations
 
 import os

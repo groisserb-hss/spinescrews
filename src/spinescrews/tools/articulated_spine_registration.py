@@ -1,3 +1,11 @@
+"""Articulated multi-level registration of the preop spine model to the postop CT.
+
+`align_spine_to_CT()` drives the postop fit: it builds a cortical-bone point cloud (with a
+metal-streak artifact mask), runs multi-level articulated ICP with a Geman-McClure robust loss,
+and refines the per-vertebra poses with a discrete particle-belief-propagation (D-PMP) refit
+that respects the spine's kinematic chain.
+"""
+
 import os
 import numpy as np
 from numpy import pi
@@ -25,39 +33,6 @@ from joblib import Parallel, delayed
 
 
 log = logging.getLogger(__name__)
-
-_CMAES_DEBUG_DIR = '/tmp/cmaes_debug'
-
-
-def _save_cmaes_inputs(spine, postop_pts, icp_affs, ratios, kdtrees,
-                       postop_img, artifact_mask, metal_thresh,
-                       level_names, iso_res, initial_radius):
-    """Dump refit inputs to disk for offline debugging."""
-    import json
-    d = _CMAES_DEBUG_DIR
-    os.makedirs(d, exist_ok=True)
-
-    # Spine: verts, landmarks, default_aff (faces not used by _cmaes_refit)
-    np.savez(os.path.join(d, 'spine.npz'),
-             **{f'verts_{i}': v for i, v in enumerate(spine.verts)},
-             **{f'landmarks_{i}': lm for i, lm in enumerate(spine.landmarks)},
-             default_aff=spine.default_aff)
-
-    np.save(os.path.join(d, 'postop_pts.npy'), postop_pts)
-    np.save(os.path.join(d, 'icp_affs.npy'), icp_affs)
-    np.save(os.path.join(d, 'ratios.npy'), ratios)
-
-    if postop_img is not None:
-        nib.save(postop_img, os.path.join(d, 'postop.nii.gz'))
-    if artifact_mask is not None:
-        np.save(os.path.join(d, 'artifact_mask.npy'), artifact_mask)
-
-    with open(os.path.join(d, 'params.json'), 'w') as f:
-        json.dump({'metal_thresh': metal_thresh, 'level_names': level_names,
-                   'iso_res': iso_res, 'initial_radius': initial_radius,
-                   'nJ': spine.nJ}, f)
-
-    log.info('Saved CMA-ES debug inputs to %s', d)
 
 
 def align_spine_to_CT(preop_verts: dict[str, Vertebra], postop_img: nib.Nifti1Image,
@@ -130,12 +105,6 @@ def align_spine_to_CT(preop_verts: dict[str, Vertebra], postop_img: nib.Nifti1Im
         d = kdtrees[jj].query(postop_inv)[0]
         ratios[jj] = np.sum(d < iso_res) / len(spine.landmarks[jj])
     log.info('Computed ratios: %s' % ', '.join(['%s: %.2f' % (name, r) for name, r in zip(level_names, ratios)]))
-
-    ## Save inputs for offline debugging (enable with env var DEBUG_CMAES=1)
-    if os.environ.get('DEBUG_CMAES'):
-        _save_cmaes_inputs(spine, postop_pts, icp_affs, ratios, kdtrees,
-                           postop_img, artifact_mask, metal_thresh,
-                           level_names, iso_res, initial_radius)
 
     ## Step 4: Per-level refit via particle belief propagation
     screw_levels = set(s.level for s in screws)
@@ -221,7 +190,7 @@ def extract_postop_pts(postop_img: nib.Nifti1Image, screws: list[Screw],
     if metal_thresh is None:
         metal_thresh = compute_metal_threshold(postop_img.get_fdata())
 
-    # Global bone threshold (CMA-ES re-extracts with per-vertebra adaptive scoring)
+    # Global bone threshold (median of the per-level thresholds)
     variable_thresh = np.median(thresh_list)
 
     # extract cortical points as 3D point cloud

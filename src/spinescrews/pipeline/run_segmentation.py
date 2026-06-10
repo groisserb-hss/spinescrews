@@ -193,7 +193,9 @@ def main():
     import yaml as _yaml
 
     parser = argparse.ArgumentParser(
-        description='Run vertebral segmentation with selectable backend.')
+        description='Vertebral segmentation (step 01): label the vertebrae in a CT volume with a '
+                    'selectable backend (TotalSegmentator by default, or Inria). Writes '
+                    'preop_seg.nii.gz to the output directory.')
     parser.add_argument('--input', required=True, type=str,
                         help='Input NIfTI volume (e.g. preop.nii.gz)')
     parser.add_argument('--output_dir', required=True, type=str,
@@ -212,7 +214,8 @@ def main():
                         help='Path to Inria/SPINE vertebrae_segmentation repo')
     parser.add_argument('--inria_env', type=str, default=None,
                         help='Conda env for Inria segmentor (default: verse20)')
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--debug', action='store_true',
+                        help='Verbose debug logging.')
     args = parser.parse_args()
 
     # load config defaults from YAML if provided

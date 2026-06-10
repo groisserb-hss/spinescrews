@@ -1,3 +1,10 @@
+"""Screw geometry models and plan parsing.
+
+Defines the `Screw` class hierarchy (fixed / headless / polyaxial / skip) and `parse_preop_plan()`,
+which reads a 3D Slicer screw-plan CSV into the typed `Screw` objects the pipeline registers and
+scores against.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

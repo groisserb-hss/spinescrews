@@ -627,13 +627,18 @@ def main():
     """CLI entry point for postop registration (steps 05-06). Called by spinescrews-postop console script."""
     t0 = time()
     import argparse
-    from spinescrews.tools.config import load_config, save_resolved_config
+    from spinescrews.tools.config import (load_config, save_resolved_config,
+                                          add_common_pipeline_args, overrides_from_args)
 
-    parser = argparse.ArgumentParser(description='Postop registration (steps 05-06).')
-    parser.add_argument('specimen_dir', type=str)
-    parser.add_argument('--debug', action='store_true', default=None)
-    parser.add_argument('--n-jobs', type=int, default=None,
-                        help='Number of CPU cores for parallel steps (-1=all, -3=all-but-2, etc.)')
+    parser = argparse.ArgumentParser(
+        description='Postop registration (steps 05-06): metal screw detection, articulated spine '
+                    'ICP + D-PMP refit, and per-level mutual-information refinement. Requires '
+                    'postop.nii.gz, preop_plan.csv, and a completed preop alignment (run '
+                    'spinescrews-preop first). Outputs go to <specimen_dir>/analysis/.')
+    parser.add_argument('specimen_dir',
+                        help='Specimen directory containing postop.nii.gz / preop_plan.csv with '
+                             'preop alignment already done; results go to <specimen_dir>/analysis/.')
+    add_common_pipeline_args(parser)
     parser.add_argument('--no-patches', action='store_true', default=None,
                         help='Skip writing postop-reg.nii.gz volumes (saves ~59 MB/level)')
     parser.add_argument('--mi-method', type=str, default=None,
@@ -641,14 +646,7 @@ def main():
                         help='Optimizer for MI registration (default: L-BFGS-B)')
     args = parser.parse_args()
 
-    overrides = {}
-    if args.debug is not None:
-        overrides['debug'] = args.debug
-        overrides['n_jobs'] = 1
-        overrides['mi_n_jobs'] = 1
-    if args.n_jobs is not None:
-        overrides['n_jobs'] = args.n_jobs
-        overrides['mi_n_jobs'] = args.n_jobs
+    overrides = overrides_from_args(args)
     if args.no_patches is not None:
         overrides['no_patches'] = args.no_patches
     if args.mi_method is not None:

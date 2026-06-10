@@ -72,7 +72,7 @@ src/spinescrews/
 ├── pipeline/            # entry points (one module per console script)
 ├── tools/               # core algorithms and data structures
 │   ├── articulated_models/  # Articulated base class + Spine kinematic chain
-│   ├── inria_segmentor/     # vendored Inria segmentation (CC-BY-NC-SA)
+│   ├── inria_segmentor/     # fetched-at-setup Inria segmentation (CC-BY-NC-SA)
 │   └── totalseg_segmentor/  # TotalSegmentator wrapper (Apache-2.0)
 ├── figures/             # 14 visualization modules (importable + standalone CLI)
 └── dicom_utils/         # shell scripts for DICOM survey + conversion

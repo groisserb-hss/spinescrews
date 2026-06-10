@@ -109,25 +109,24 @@ def main():
     """CLI entry point for full pipeline (steps 01-06). Called by spinescrews-align console script."""
     t0 = time()
     import argparse
-    from spinescrews.tools.config import load_config, save_resolved_config
+    from spinescrews.tools.config import (load_config, save_resolved_config,
+                                          add_common_pipeline_args, overrides_from_args)
 
-    parser = argparse.ArgumentParser(description='Run pipeline on a single CT scan.')
-    parser.add_argument('specimen_dir', type=str)
-    parser.add_argument('--debug', action='store_true', default=None)
-    parser.add_argument('--n-jobs', type=int, default=None,
-                        help='Number of CPU cores for parallel steps (-1=all, -3=all-but-2, etc.)')
+    parser = argparse.ArgumentParser(
+        description='Full per-specimen pipeline (steps 01-06): preop normalization, template '
+                    'correspondence, orientation refinement, screw detection, and articulated '
+                    'registration. Requires preop.nii.gz, postop.nii.gz, preop_plan.csv, and '
+                    'segmentation output (run spinescrews-segment first). Outputs go to '
+                    '<specimen_dir>/analysis/.')
+    parser.add_argument('specimen_dir',
+                        help='Specimen directory containing preop.nii.gz / postop.nii.gz / '
+                             'preop_plan.csv; results are written to <specimen_dir>/analysis/.')
+    add_common_pipeline_args(parser)
     parser.add_argument('--no-patches', action='store_true', default=None,
                         help='Skip writing postop-reg.nii.gz volumes (saves ~59 MB/level)')
     args = parser.parse_args()
 
-    overrides = {}
-    if args.debug is not None:
-        overrides['debug'] = args.debug
-        overrides['n_jobs'] = 1
-        overrides['mi_n_jobs'] = 1
-    if args.n_jobs is not None:
-        overrides['n_jobs'] = args.n_jobs
-        overrides['mi_n_jobs'] = args.n_jobs
+    overrides = overrides_from_args(args)
     if args.no_patches is not None:
         overrides['no_patches'] = args.no_patches
 

@@ -7,40 +7,64 @@ errors relative to the planned trajectories and pedicle anatomy.
 
 ## Installation
 
-Tested on macOS and Linux. Windows is not tested.
+Tested on macOS and Linux (Windows is not tested). Run the commands below in a terminal, in
+order. Steps 3-7 are run **from the repo root** — the `spinescrews` folder created in step 2.
 
-### 1. Conda environment
+### 1. Install Anaconda
+
+The pipeline runs inside a conda environment, which also provides Python 3.10 (no separate Python
+install needed). If you don't already have conda, install **Anaconda** from
+<https://www.anaconda.com/download> (or the lighter **Miniconda** from
+<https://docs.conda.io/projects/miniconda/en/latest/>), accept the installer defaults, then open
+a new terminal so the `conda` command is available.
+
+### 2. Get the code
+
+```bash
+git clone https://github.com/groisserb-hss/spinescrews.git
+cd spinescrews
+```
+
+Run the remaining steps from inside this `spinescrews` folder.
+
+### 3. Create the conda environment
 
 ```bash
 conda env create --file environment.yml
 conda activate screws310
 ```
 
-### 2. bg3dtools
+This builds an environment named `screws310` (Python 3.10 plus the core scientific libraries) and
+activates it. Run `conda activate screws310` in every new terminal before using the pipeline.
 
-Install [bg3dtools](https://github.com/bgroisser/bg3dtools) (provides the
-`bg3dtools` and `spectral_match` packages). spinescrews uses the `mesh`,
-`viz`, and `graph` extras:
+### 4. Install bg3dtools
+
+spinescrews depends on [bg3dtools](https://github.com/bgroisser/bg3dtools) (which provides the
+`bg3dtools` and `spectral_match` packages). Clone it and install it with the `mesh`, `viz`, and
+`graph` extras **before** installing spinescrews:
 
 ```bash
-pip install -e '/path/to/bg3dtools[mesh,viz,graph]'
+git clone https://github.com/bgroisser/bg3dtools.git
+pip install -e './bg3dtools[mesh,viz,graph]'
 ```
 
-(spinescrews's own `pip install -e .` will request the same extras
-transitively, but installing bg3dtools editable first keeps the source of
-truth obvious.)
+`-e` is an "editable" install, so a later `git pull` inside `bg3dtools/` updates the package in
+place.
 
-### 3. Install spinescrews
+### 5. Install spinescrews
 
 ```bash
 pip install -e .
 ```
 
-This makes the `spinescrews` package importable and installs console scripts
-(`spinescrews-align`, `spinescrews-preop`, `spinescrews-postop`,
-`spinescrews-accuracy`, `spinescrews-segment`).
+This makes the `spinescrews` package importable and installs the console scripts
+(`spinescrews-segment`, `spinescrews-preop`, `spinescrews-postop`, `spinescrews-align`,
+`spinescrews-accuracy`). Every command supports `--help`.
 
-### 4. External tools
+### 6. External command-line tools
+
+These are used only for the DICOM-to-NIfTI conversion in [Step 0](#step-0-dicom-preparation)
+(macOS via Homebrew, Linux via apt):
 
 | Tool | Purpose | Install |
 |------|---------|---------|
@@ -48,15 +72,19 @@ This makes the `spinescrews` package importable and installs console scripts
 | `dcmdump` | DICOM tag inspection | Part of [DCMTK](https://dicom.offis.de/dcmtk/) (`brew install dcmtk` / `apt install dcmtk`) |
 | `jq` | JSON processing for DICOM survey | `brew install jq` / `apt install jq` |
 
-### 5. Segmentation backend
+### 7. Segmentation backend
 
-**TotalSegmentator** (default, Apache-2.0) — installs directly into `screws310`:
+Choose **one** backend (TotalSegmentator is the default and recommended). Run from the repo root:
+
+**TotalSegmentator** (default, Apache-2.0) — installs into the `screws310` environment; model
+weights (~1.5 GB) download automatically on first use:
 
 ```bash
 bash src/spinescrews/tools/totalseg_segmentor/setup.sh
 ```
 
-**Inria** (alternative, CC-BY-NC-SA-4.0) — requires a separate conda environment:
+**Inria** (alternative, CC-BY-NC-SA-4.0) — creates a **separate** conda environment named
+`verse20`. You do not activate it yourself; `spinescrews-segment --backend inria` calls it for you.
 
 ```bash
 bash src/spinescrews/tools/inria_segmentor/setup.sh
@@ -78,7 +106,37 @@ can see exactly which settings were used.
 
 See `defaults.yml` for the full list of settings and their defaults.
 
+### Specimen directory layout
+
+The pipeline works inside a per-specimen directory (`specimen_XX` below — name it whatever you
+like). You supply the inputs; the pipeline creates everything under `analysis/`:
+
+```
+specimen_XX/
+├── preop.nii.gz      # input: pre-operative CT  (from Step 0)
+├── postop.nii.gz     # input: post-operative CT (from Step 0)
+├── preop_plan.csv    # input: screw plan        (from the Hybrid Screw Planner)
+├── config.yml        # optional: per-specimen setting overrides
+└── analysis/         # created by the pipeline
+    ├── 01_segmentation/ … 07_accuracy/   # one folder per step, each with a summary.json gate
+    └── config_resolved.yml               # the exact settings used
+```
+
 ## Usage
+
+Before your first run, make sure you have:
+
+- [ ] Anaconda/Miniconda installed (install step 1)
+- [ ] the repository cloned (step 2)
+- [ ] the `screws310` environment created and activated (step 3)
+- [ ] bg3dtools installed (step 4)
+- [ ] spinescrews installed, so the `spinescrews-*` commands work (step 5)
+- [ ] `dcm2niix`, `dcmdump`, and `jq` installed (step 6)
+- [ ] one segmentation backend set up (step 7)
+- [ ] CT scans converted to `preop.nii.gz` / `postop.nii.gz` ([Step 0](#step-0-dicom-preparation))
+- [ ] a screw plan exported to `preop_plan.csv` ([Screw planning](#screw-planning-3d-slicer))
+
+The pipeline then runs as numbered steps; every `spinescrews-*` command supports `--help`.
 
 ### Screw planning (3D Slicer)
 
@@ -200,6 +258,9 @@ Each step writes a `summary.json` gate file when it finishes. On re-run, complet
 steps are skipped automatically.
 
 ### Step 7: Accuracy measurement
+
+Requires the screw plan `specimen_XX/preop_plan.csv` exported by the
+[Hybrid Screw Planner](#screw-planning-3d-slicer); this step compares planned vs. detected screws.
 
 ```bash
 spinescrews-accuracy /path/to/specimen_XX

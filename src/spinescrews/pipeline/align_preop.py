@@ -759,22 +759,21 @@ def main():
     """CLI entry point for preop alignment (steps 01-04). Called by spinescrews-preop console script."""
     t0 = time()
     import argparse
-    from spinescrews.tools.config import load_config, save_resolved_config
+    from spinescrews.tools.config import (load_config, save_resolved_config,
+                                          add_common_pipeline_args, overrides_from_args)
 
-    parser = argparse.ArgumentParser(description='Preop alignment (steps 01-04).')
-    parser.add_argument('specimen_dir', type=str)
-    parser.add_argument('--debug', action='store_true', default=None)
-    parser.add_argument('--n-jobs', type=int, default=None,
-                        help='Number of CPU cores for parallel steps (-1=all, -3=all-but-2, etc.)')
+    parser = argparse.ArgumentParser(
+        description='Preop alignment (steps 01-04): genus-1 mesh extraction, spectral template '
+                    'correspondence, and Whittaker-smoothed orientation refinement. Requires '
+                    'preop.nii.gz, preop_plan.csv, and segmentation output (run '
+                    'spinescrews-segment first). Outputs go to <specimen_dir>/analysis/.')
+    parser.add_argument('specimen_dir',
+                        help='Specimen directory containing preop.nii.gz / preop_plan.csv and '
+                             'segmentation output; results go to <specimen_dir>/analysis/.')
+    add_common_pipeline_args(parser)
     args = parser.parse_args()
 
-    overrides = {}
-    if args.debug is not None:
-        overrides['debug'] = args.debug
-        overrides['n_jobs'] = 1
-        overrides['mi_n_jobs'] = 1
-    if args.n_jobs is not None:
-        overrides['n_jobs'] = args.n_jobs
+    overrides = overrides_from_args(args)
 
     config = load_config(args.specimen_dir, overrides=overrides)
     save_resolved_config(config)

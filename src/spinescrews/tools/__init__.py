@@ -1,3 +1,10 @@
+"""Core data structures and constants shared across the pipeline.
+
+Defines the vertebra-label encoding (`seg_val` / `val_seg`), the canonical caudal-to-cranial
+level ordering (`possible_levels`), the RAS axis indices (`dimR`, `dimA`, `dimS`), and the
+measurement record types (`ScrewMeasures`, `BreachMeasures`, `MeshLabels`).
+"""
+
 from collections import namedtuple
 
 seg_val = {'C1': 1, 'C2': 2, 'C3': 3, 'C4': 4, 'C5': 5, 'C6': 6, 'C7': 7,
@@ -10,6 +17,7 @@ val_seg = {v: k for k, v in seg_val.items()}
 
 # NOTE: a verbatim copy lives in slicer_tools/HybridScrewPlanner/HybridScrewPlanner.py
 # (POSSIBLE_LEVELS) for export-time plan validation; keep the two in sync.
+# The copy is checked against this list by slicer_tools/tests/test_possible_levels_sync.py.
 possible_levels = ['LS', 'L5', 'L4', 'L3', 'L2', 'L1',
                    'T13', 'T12', 'T11', 'T10', 'T9', 'T8', 'T7', 'T6', 'T5',
                    'T4', 'T3', 'T2', 'T1', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2']

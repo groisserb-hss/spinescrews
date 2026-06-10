@@ -257,3 +257,30 @@ def save_resolved_config(config):
 
     with open(out_path, 'w') as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+
+
+# ---------------------------------------------------------------------------
+# Shared CLI helpers for the pipeline console scripts
+# ---------------------------------------------------------------------------
+def add_common_pipeline_args(parser):
+    """Add the --debug / --n-jobs flags shared by the alignment console scripts."""
+    parser.add_argument('--debug', action='store_true', default=None,
+                        help='Run single-threaded with verbose logging (n_jobs=1); for troubleshooting.')
+    parser.add_argument('--n-jobs', type=int, default=None,
+                        help='CPU cores for parallel steps (-1 = all, -3 = all but 2, 1 = serial).')
+
+
+def overrides_from_args(args):
+    """Build a config-override dict from the shared CLI args (--debug, --n-jobs).
+
+    Script-specific flags (e.g. --no-patches, --mi-method) are merged in by the caller.
+    """
+    overrides = {}
+    if getattr(args, 'debug', None):
+        overrides['debug'] = True
+        overrides['n_jobs'] = 1
+        overrides['mi_n_jobs'] = 1
+    if getattr(args, 'n_jobs', None) is not None:
+        overrides['n_jobs'] = args.n_jobs
+        overrides['mi_n_jobs'] = args.n_jobs
+    return overrides

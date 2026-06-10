@@ -1,3 +1,10 @@
+"""Spectral + anatomical correspondence between a vertebra and its template.
+
+`SpectralDescriptor` augments spectral (functional-map) features with anatomical signatures for
+robust vertebra-to-template matching; `load_vertebral_template()` loads and caches the
+preprocessed per-level template meshes and labels.
+"""
+
 from os.path import isfile
 
 import numpy as np

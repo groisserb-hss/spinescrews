@@ -1,3 +1,10 @@
+"""The `Vertebra` class: per-level geometry extracted from a segmented CT.
+
+Builds a genus-1 (canal-threaded) surface mesh for a single vertebra and provides skeleton-based
+canal-loop detection, orientation normalization, affine transforms between CT and canonical
+frames, and volume cropping used throughout alignment and accuracy measurement.
+"""
+
 from os.path import join
 import logging
 import warnings

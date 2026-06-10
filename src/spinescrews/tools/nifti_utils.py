@@ -1,3 +1,10 @@
+"""NIfTI volume helpers: resampling, cropping, and metal-threshold estimation.
+
+Utilities for working with CT volumes in RAS — resampling to an isotropic pitch, bounding-box
+cropping, and Otsu-based estimation of the metal/bone Hounsfield thresholds used by screw
+detection (`compute_metal_threshold`).
+"""
+
 import logging
 
 import numpy as np

@@ -1,8 +1,8 @@
 """Validation harness for burn_screw_endpoints.py (SimpleITK -> pydicom migration).
 
 Runnable two ways:
-    python slicer_tools/tests/test_burn_screw_endpoints.py      # prints PASS/SKIP/FAIL
-    pytest slicer_tools/tests/                                   # if pytest installed
+    python dicom_tools/tests/test_burn_screw_endpoints.py      # prints PASS/SKIP/FAIL
+    pytest dicom_tools/tests/                                   # if pytest installed
 
 Tiers:
   0  pure math, no DICOM           -- always runs

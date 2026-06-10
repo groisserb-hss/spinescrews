@@ -9,7 +9,7 @@
 # identical set of voxels; they differ only in how the series is read/written.
 #
 # Example:
-# python slicer_tools/burn_screw_endpoints.py \
+# python dicom_tools/burn_screw_endpoints.py \
 #     --dicom-dir /path/to/ct_dicom_series \
 #     --csv /path/to/screw_line_coordinates.csv \
 #     --out-dir /path/to/burned_dicom_export

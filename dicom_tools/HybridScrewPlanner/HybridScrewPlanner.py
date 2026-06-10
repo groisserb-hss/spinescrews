@@ -48,7 +48,7 @@ def _fmt3(p):
 # Vertebral levels accepted by the analysis pipeline, caudal-to-cranial.
 # MUST stay in sync with `possible_levels` in src/spinescrews/tools/__init__.py
 # (this module runs inside 3D Slicer and cannot import the spinescrews package).
-# Enforced by slicer_tools/tests/test_possible_levels_sync.py.
+# Enforced by dicom_tools/tests/test_possible_levels_sync.py.
 POSSIBLE_LEVELS = (
     "LS", "L5", "L4", "L3", "L2", "L1",
     "T13", "T12", "T11", "T10", "T9", "T8", "T7", "T6", "T5",

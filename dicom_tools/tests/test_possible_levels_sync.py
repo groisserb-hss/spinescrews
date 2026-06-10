@@ -1,14 +1,14 @@
 """Drift guard: the Slicer plugin's POSSIBLE_LEVELS must equal the pipeline's possible_levels.
 
-The Hybrid Screw Planner (slicer_tools/HybridScrewPlanner) runs inside 3D Slicer's bundled Python
+The Hybrid Screw Planner (dicom_tools/HybridScrewPlanner) runs inside 3D Slicer's bundled Python
 and cannot import the spinescrews package, so it keeps a verbatim copy of the accepted vertebral
 levels. This test enforces that the copy stays in sync with the source of truth in
 src/spinescrews/tools/__init__.py — if they drift, plan export would validate names against a
 different level set than the pipeline accepts.
 
 Runnable two ways:
-    python slicer_tools/tests/test_possible_levels_sync.py     # prints PASS/SKIP/FAIL
-    pytest slicer_tools/tests/                                  # if pytest installed
+    python dicom_tools/tests/test_possible_levels_sync.py     # prints PASS/SKIP/FAIL
+    pytest dicom_tools/tests/                                  # if pytest installed
 
 Runs in the screws310 env (where spinescrews is installed); needs no 3D Slicer and no data.
 """

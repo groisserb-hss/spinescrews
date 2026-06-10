@@ -40,16 +40,17 @@ activates it. Run `conda activate screws310` in every new terminal before using 
 ### 4. Install bg3dtools
 
 spinescrews depends on [bg3dtools](https://github.com/bgroisser/bg3dtools) (which provides the
-`bg3dtools` and `spectral_match` packages). Clone it and install it with the `mesh`, `viz`, and
-`graph` extras **before** installing spinescrews:
+`bg3dtools` and `spectral_match` packages). Clone it **next to** the spinescrews folder — the
+`../` below keeps it out of this repository — and install it with the `mesh`, `viz`, and `graph`
+extras **before** installing spinescrews:
 
 ```bash
-git clone https://github.com/bgroisser/bg3dtools.git
-pip install -e './bg3dtools[mesh,viz,graph]'
+git clone https://github.com/bgroisser/bg3dtools.git ../bg3dtools
+pip install -e '../bg3dtools[mesh,viz,graph]'
 ```
 
-`-e` is an "editable" install, so a later `git pull` inside `bg3dtools/` updates the package in
-place.
+`-e` is an "editable" install, so a later `git pull` inside `../bg3dtools/` updates the package
+in place.
 
 ### 5. Install spinescrews
 
@@ -140,7 +141,7 @@ The pipeline then runs as numbered steps; every `spinescrews-*` command supports
 
 ### Screw planning (3D Slicer)
 
-`slicer_tools/` holds companion utilities for authoring pedicle-screw plans in
+`dicom_tools/` holds companion utilities for authoring pedicle-screw plans in
 [3D Slicer](https://www.slicer.org/) and exporting them for surgical navigation.
 They run inside Slicer / as a standalone script (not via the `spinescrews-*`
 console scripts) and produce the RAS entry/tip CSV the pipeline reads as its
@@ -156,11 +157,11 @@ pipeline-ready row per line (`line_name, screw_type, line_id, entry_ras_*,
 tip_ras_*, length_mm, cylinder_radius_mm, cylinder_model_name`) and logs a
 warning for anything `parse_preop_plan` would reject — names that aren't
 `<level><side>`, or levels missing an L/R partner. Install it by adding
-`slicer_tools/HybridScrewPlanner` under *Edit > Application Settings > Modules >
+`dicom_tools/HybridScrewPlanner` under *Edit > Application Settings > Modules >
 Additional module paths* and restarting; it then appears as "Hybrid Screw
 Planner" in the *Planning* category. Self-tests: *Testing > Self-Tests*, or
 `slicer.selfTests["HybridScrewPlanner"]()` (see
-`slicer_tools/HybridScrewPlanner/tests.txt`).
+`dicom_tools/HybridScrewPlanner/tests.txt`).
 
 **Burn endpoints into DICOM (for Mazor).** `burn_screw_endpoints.py` paints a
 small high-HU sphere at every entry and tip from the planner CSV into a copy of
@@ -170,7 +171,7 @@ into navigation software such as Mazor. It runs on `pydicom` (already in the
 `screws310` environment — no extra install):
 
 ```bash
-python slicer_tools/burn_screw_endpoints.py \
+python dicom_tools/burn_screw_endpoints.py \
     --dicom-dir /path/to/ct_dicom_series \
     --csv /path/to/screw_line_coordinates.csv \
     --out-dir /path/to/burned_dicom_export
@@ -188,14 +189,14 @@ you. Just name each Markups line `<level><side>` (e.g. `T11L`, `L1R`); the
 planner warns at export about any name that doesn't match or any level missing
 its L/R partner (use a `Skip`-type line to stand in for an un-instrumented side).
 
-A backend-equivalence test suite lives in `slicer_tools/tests/` — it runs
+A backend-equivalence test suite lives in `dicom_tools/tests/` — it runs
 pure-math geometry checks by default; point `SCREWS_TEST_DICOM_DIR` at a CT
 series (and set `SCREWS_TEST_SITK=1`) to validate the pydicom backend against
 SimpleITK on real data:
 
 ```bash
 SCREWS_TEST_DICOM_DIR=/path/to/ct_dicom_series SCREWS_TEST_SITK=1 \
-    python slicer_tools/tests/test_burn_screw_endpoints.py
+    python dicom_tools/tests/test_burn_screw_endpoints.py
 ```
 
 ### Step 0: DICOM preparation
@@ -203,7 +204,7 @@ SCREWS_TEST_DICOM_DIR=/path/to/ct_dicom_series SCREWS_TEST_SITK=1 \
 Use `survey_dicoms.sh` to scan your DICOM directories and build a metadata index:
 
 ```bash
-src/spinescrews/dicom_utils/survey_dicoms.sh -o metadata.json /path/to/dicom_dir1 /path/to/dicom_dir2
+dicom_tools/survey_dicoms.sh -o metadata.json /path/to/dicom_dir1 /path/to/dicom_dir2
 ```
 
 Then use `convert_to_nii.sh` to extract matching series as NIfTI. You can filter
@@ -212,13 +213,13 @@ for an interactive selection menu:
 
 ```bash
 # Extract pre-op CT (filter by series description)
-src/spinescrews/dicom_utils/convert_to_nii.sh metadata.json /path/to/specimen_XX preop series_description:"BONE STD"
+dicom_tools/convert_to_nii.sh metadata.json /path/to/specimen_XX preop series_description:"BONE STD"
 
 # Extract post-op CT
-src/spinescrews/dicom_utils/convert_to_nii.sh metadata.json /path/to/specimen_XX postop series_description:"MAZOR BONE"
+dicom_tools/convert_to_nii.sh metadata.json /path/to/specimen_XX postop series_description:"MAZOR BONE"
 
 # Interactive mode (no filters — presents a selection menu)
-src/spinescrews/dicom_utils/convert_to_nii.sh metadata.json /path/to/specimen_XX preop
+dicom_tools/convert_to_nii.sh metadata.json /path/to/specimen_XX preop
 ```
 
 This produces `preop.nii.gz` and `postop.nii.gz` in the specimen directory.

@@ -31,7 +31,7 @@ External CLI tools: `dcm2niix`, `dcmdump`, `jq`.
 
 The main pipeline has **no tests, linting, CI/CD, or formatting configs**. Quality assurance is manual via pipeline runs, gate files (`summary.json`), and visual QC through auto-generated figures.
 
-Exception: `slicer_tools/` ships an opt-in test suite (`slicer_tools/tests/test_burn_screw_endpoints.py`, runnable as plain `python …` or under `pytest`) for the screw-endpoint burn tool. Pure-math geometry tests run with no data; DICOM read/write and SimpleITK-vs-pydicom equivalence tests are gated on `SCREWS_TEST_DICOM_DIR` (a CT series folder) and `SCREWS_TEST_SITK=1`. No DICOMs are committed. The burn tool defaults to the `pydicom` backend (SimpleITK optional via `--backend simpleitk`); its `--burn-value` is in **HU** and output is written as int16 + `RescaleIntercept −1024` (consistent with `nifti_utils.py`).
+Exception: `dicom_tools/` ships an opt-in test suite (`dicom_tools/tests/test_burn_screw_endpoints.py`, runnable as plain `python …` or under `pytest`) for the screw-endpoint burn tool. Pure-math geometry tests run with no data; DICOM read/write and SimpleITK-vs-pydicom equivalence tests are gated on `SCREWS_TEST_DICOM_DIR` (a CT series folder) and `SCREWS_TEST_SITK=1`. No DICOMs are committed. The burn tool defaults to the `pydicom` backend (SimpleITK optional via `--backend simpleitk`); its `--burn-value` is in **HU** and output is written as int16 + `RescaleIntercept −1024` (consistent with `nifti_utils.py`).
 
 ## Running the Pipeline
 
@@ -74,9 +74,10 @@ src/spinescrews/
 │   ├── articulated_models/  # Articulated base class + Spine kinematic chain
 │   ├── inria_segmentor/     # fetched-at-setup Inria segmentation (CC-BY-NC-SA)
 │   └── totalseg_segmentor/  # TotalSegmentator wrapper (Apache-2.0)
-├── figures/             # 14 visualization modules (importable + standalone CLI)
-└── dicom_utils/         # shell scripts for DICOM survey + conversion
+└── figures/             # 14 visualization modules (importable + standalone CLI)
 ```
+
+Repo-root `dicom_tools/` (outside the installed package) holds the DICOM-facing companion tools: the Step-0 survey/conversion shell scripts (`survey_dicoms.sh`, `convert_to_nii.sh`), the 3D Slicer Hybrid Screw Planner, the screw-endpoint burn tool, and their opt-in tests.
 
 ### Pipeline Entry Points (`pipeline/`)
 

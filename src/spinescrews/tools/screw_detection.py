@@ -18,7 +18,7 @@ from joblib import Parallel, delayed, effective_n_jobs
 from spinescrews.tools import possible_levels
 from spinescrews.tools.paths import timed
 from spinescrews.tools.screw_models import Screw
-from spinescrews.tools.nifti_utils import HU_CLIP, compute_metal_threshold
+from spinescrews.tools.nifti_utils import HU_CLIP, compute_metal_threshold, resample_to_pitch
 from spinescrews.tools.articulated_models.base_unified import Articulated
 from bg3dtools.transforms_unified import make_aff, transform_points_forward, extract_params, transform_points_inverse, rel_params_to_aff, aff_to_rel_params
 from bg3dtools.pointclouds.registration import pc_icp
@@ -549,12 +549,23 @@ def detect_screws(postop_ct: nib.Nifti1Image, screws: list[Screw],
     log.info('Searching for %d screws' % num_screws)
     timings = {}
 
+    # Normalize input to step 05's baseline pitch: slice → 0.625 mm, in-plane
+    # preserved unless coarser than 0.8 mm (then → 0.4 mm). Downstream pitch-
+    # dependent formulas (DBSCAN eps, grid_mm, etc.) were tuned for this range.
+    pitch = np.abs(np.diag(postop_ct.affine[:3, :3]))
+    target = (
+        pitch[0] if pitch[0] <= 0.8 else 0.4,
+        pitch[1] if pitch[1] <= 0.8 else 0.4,
+        0.625,
+    )
+    postop_ct = resample_to_pitch(postop_ct, target)
+
     plan_model = InstrumentedSpine(placed_screws, tforms)
     # convert to point cloud
     with timed('extract_metal_points', timings):
         pts, density, postop_pitch = extract_metal_points(postop_ct, threshold=threshold)
     # thin to ~0.67mm grid or input pitch, whichever is coarser
-    # at baseline (max pitch 0.625): grid_mm = max(0.667, 0.625) = 0.667 → pts/0.667 = pts*1.5 (exact match)
+    # post-resample max pitch is in [0.625, 0.8]: grid_mm = max(0.667, max_pitch)
     grid_mm = max(1.0 / 1.5, np.max(postop_pitch))
     pts, density = sparse_quantize(pts / grid_mm, density)
     pts = pts.astype(float) * grid_mm
@@ -768,8 +779,8 @@ def extract_metal_points(postop_ct: nib.Nifti1Image,
 
     # Threshold for metal
     metal_mask = data > threshold
-    # ~1mm physical closure: at baseline pitch (~0.5mm) → 2 iters (exact match)
-    # no clamp — at very coarse pitch, skip closing to avoid bridging adjacent screws
+    # ~1mm physical closure. Postop is resampled to (≤0.8, ≤0.8, 0.625) mm
+    # upstream, so mean(pitch) ∈ [~0.5, ~0.74] → 1 or 2 iters.
     closing_iters = round(1.0 / np.mean(pitch))
     if closing_iters > 0:
         metal_mask = ndimage.binary_closing(metal_mask, iterations=closing_iters)
@@ -781,12 +792,14 @@ def extract_metal_points(postop_ct: nib.Nifti1Image,
     smooth1 = ndimage.gaussian_filter(metal_mask.astype(np.float32), sigma)
     density = smooth1[metal_mask]
 
-    # cluster points to remove small isolated regions
-    # eps must capture face-adjacent voxels: at baseline (max pitch 0.625) → 0.75
+    # cluster points to remove small isolated regions; eps captures face-
+    # adjacent voxels along the coarsest axis. Post-resample max(pitch) is
+    # in [0.625, 0.8], giving eps in [0.75, 0.96].
     eps = 1.2 * np.max(pitch)
 
-    # coarse voxels make screw shafts 1-2 voxels wide, so most metal
-    # voxels have very few neighbors
+    # Post-resample voxel_vol is bounded but varies ~10× across the in-plane
+    # range; keep min_samples adaptive so sparse shafts at coarse in-plane
+    # don't lose their cluster cores.
     voxel_vol = float(np.prod(pitch))
     min_samples = int(min(7, round(3.0 / voxel_vol**0.35)))
     dbscan = DBSCAN(eps=eps, min_samples=min_samples).fit(pts)

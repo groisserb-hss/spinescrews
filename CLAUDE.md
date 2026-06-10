@@ -13,8 +13,8 @@ Tested on macOS and Linux. Python >= 3.10.
 ```bash
 conda env create --file environment.yml
 conda activate screws310
-pip install -e /path/to/bg3dtools   # external dependency (provides bg3dtools + spectral_match)
-pip install -e .                     # install spinescrews in editable mode
+pip install -e '/path/to/bg3dtools[mesh,viz,graph]'   # external dep (provides bg3dtools + spectral_match)
+pip install -e .                                       # install spinescrews in editable mode
 ```
 
 If `triangle` fails via pip: `git clone --recurse-submodules https://github.com/drufat/triangle.git && cd triangle && python setup.py install`
@@ -29,7 +29,9 @@ External CLI tools: `dcm2niix`, `dcmdump`, `jq`.
 
 ## Build & Quality
 
-There are **no tests, linting, CI/CD, or formatting configs** in this repository. Quality assurance is manual via pipeline runs, gate files (`summary.json`), and visual QC through auto-generated figures.
+The main pipeline has **no tests, linting, CI/CD, or formatting configs**. Quality assurance is manual via pipeline runs, gate files (`summary.json`), and visual QC through auto-generated figures.
+
+Exception: `slicer_tools/` ships an opt-in test suite (`slicer_tools/tests/test_burn_screw_endpoints.py`, runnable as plain `python …` or under `pytest`) for the screw-endpoint burn tool. Pure-math geometry tests run with no data; DICOM read/write and SimpleITK-vs-pydicom equivalence tests are gated on `SCREWS_TEST_DICOM_DIR` (a CT series folder) and `SCREWS_TEST_SITK=1`. No DICOMs are committed. The burn tool defaults to the `pydicom` backend (SimpleITK optional via `--backend simpleitk`); its `--burn-value` is in **HU** and output is written as int16 + `RescaleIntercept −1024` (consistent with `nifti_utils.py`).
 
 ## Running the Pipeline
 

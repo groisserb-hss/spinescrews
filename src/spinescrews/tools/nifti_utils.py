@@ -2,11 +2,43 @@ import logging
 
 import numpy as np
 import nibabel as nib
+from scipy import ndimage
 
 log = logging.getLogger(__name__)
 
 # 12-bit DICOM: unsigned 0-4095, rescale intercept -1024 → max HU = 3071
 HU_CLIP = 3071
+
+
+def resample_to_pitch(img: nib.Nifti1Image,
+                      target_pitch: tuple[float, float, float]
+                      ) -> nib.Nifti1Image:
+    """Resample a NIfTI image to a target voxel pitch via linear interpolation.
+
+    Assumes canonical orientation (diagonal-dominant affine). Short-circuits
+    when the current pitch already matches the target within 1%. Output affine
+    preserves the world origin and adjusts the per-axis voxel scales using the
+    pitch actually achieved (which may drift from the request by sub-percent
+    due to integer rounding of the output shape).
+    """
+    pitch = np.abs(np.diag(img.affine[:3, :3]))
+    target = np.asarray(target_pitch, dtype=float)
+
+    if np.allclose(pitch, target, rtol=0.01):
+        return img
+
+    zoom = pitch / target
+    resampled = ndimage.zoom(img.get_fdata(), zoom, order=1)
+
+    achieved = pitch * (np.array(img.shape[:3]) / np.array(resampled.shape[:3]))
+    new_affine = img.affine.copy()
+    new_affine[:3, :3] = img.affine[:3, :3] @ np.diag(achieved / pitch)
+
+    log.info('resampled %s @ %s mm → %s @ %s mm',
+             tuple(img.shape[:3]), np.round(pitch, 3).tolist(),
+             tuple(resampled.shape[:3]), np.round(achieved, 3).tolist())
+
+    return nib.Nifti1Image(resampled, new_affine)
 
 
 def _otsu_threshold(values: np.ndarray, nbins: int = 256) -> float:

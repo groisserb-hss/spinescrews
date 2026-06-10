@@ -18,9 +18,13 @@ from bg3dtools.mesh.utils import per_face_normals, submesh, per_vertex_normals, 
 from bg3dtools.pointclouds.quantize import voxelize, convert_to_points, sparse_quantize
 from bg3dtools.pointclouds.fitting import project_to_line, project_to_plane
 from spectral_match.pipeline import Mesh
-from bg3dtools.mesh.clean import make_manifold, remove_ears, fill_hole, largest_patch
+from bg3dtools.mesh.clean import (
+    remove_ears, largest_patch,
+    smooth_face_mask, largest_component_mask, close_end_caps,
+    make_manifold,
+)
 from spinescrews.tools.screw_models import parse_preop_plan, sanity_check_plan, Screw
-from spinescrews.tools.error import distance_to_pedicle, measure_screw_error, align_to_screw
+from spinescrews.tools.error import distance_to_pedicle, measure_screw_error, align_to_screw, signed_distance_to_mesh
 from bg3dtools.mesh.mesh_io import read_colored_plyfile
 from spinescrews.tools.vertebrae import Vertebra
 from spinescrews.tools.paths import (preop_level_dir, correspondence_level_dir,
@@ -239,10 +243,15 @@ class ErrorComputer:
         closest_pts = transform_points_forward(bone.affine, closest_pts)
         ped_pt_world, screw_pt_world = closest_pts[0], closest_pts[1]
 
+        tip_signed = signed_distance_to_mesh(screw.detected_tip, bone.verts, bone.faces)
+        log.info('  %s: tip_signed=%.3f mm (%s)', screw.name, tip_signed,
+                 'inside bone' if tip_signed < 0 else 'outside bone')
+
         pt_y = close_pt[dimA] - planned_pts[0][dimA]
         anatomy = BreachMeasures(breach_dist=dist, breach_angle=breach_angle, planned_breach_dist=planned_dist,
                                  screw_pt_x=screw_pt_world[0], screw_pt_y=screw_pt_world[1], screw_pt_z=screw_pt_world[2],
-                                 ped_pt_x=ped_pt_world[0], ped_pt_y=ped_pt_world[1], ped_pt_z=ped_pt_world[2])
+                                 ped_pt_x=ped_pt_world[0], ped_pt_y=ped_pt_world[1], ped_pt_z=ped_pt_world[2],
+                                 tip_distance_signed=tip_signed)
         return anatomy, pt_y
 
     def normalize_to_left(self, screw: Screw, vertebra: Vertebra, canal_mesh: tuple) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
@@ -314,6 +323,19 @@ class ErrorComputer:
             nearest_dist = hit_dists[order[first_idx]]
             clear_view[nearest_ray] = nearest_dist > dist_to_center[nearest_ray]
 
+        # Denoise the per-face classification before extracting the submesh.
+        # The raw ray-visibility test is brittle on degraded inputs and can
+        # produce a fragmented mask with stray visible specks on the outer
+        # bone surface and small invisible holes inside the cylinder body.
+        # Diffusion smoothing flattens isolated misclassifications; the two
+        # largest-component passes then enforce that the visible region is
+        # one connected patch and the invisible region is one connected
+        # patch (anything smaller flips). Net effect: the visible patch is
+        # forced to be a single, topologically-clean cylinder body.
+        clear_view = smooth_face_mask(f_gen1, clear_view, n_iters=5, weight=0.5)
+        clear_view = largest_component_mask(f_gen1, clear_view)
+        clear_view = clear_view | ~largest_component_mask(f_gen1, ~clear_view)
+
         sub_v, sub_f = submesh(v_gen1, f_gen1, clear_view, return_indices=False)
         t_ray = time() - t_level
 
@@ -326,14 +348,22 @@ class ErrorComputer:
         mesh = trimesh.Trimesh(sub_v, sub_f)
         trimesh.repair.fix_normals(mesh)  # igl can't handle non-watertight meshes for winding number?
         sub_v, sub_f = mesh.vertices, mesh.faces
-        boundary = np.atleast_1d(igl.boundary_loop(mesh.faces))
-        while len(boundary) > 2:
-            sub_f = fill_hole(sub_v, sub_f, boundary)
-            mesh = trimesh.Trimesh(sub_v, sub_f)
-            trimesh.repair.fix_normals(mesh)
-            sub_v, sub_f = mesh.vertices, mesh.faces
-            boundary = np.atleast_1d(igl.boundary_loop(sub_f))
-        canal_v, canal_f = make_manifold(sub_v, sub_f)
+
+        # The carved surface should be an open cylinder with two large
+        # boundary loops (rostral + caudal end caps). Close those with
+        # fan triangulation (manifold-preserving by construction); any
+        # small residual holes in the body are handled by make_manifold.
+        sub_v, sub_f, n_large_loops = close_end_caps(sub_v, sub_f, n_expected=2)
+        if n_large_loops != 2:
+            log.warning('%s: expected 2 large boundary loops (cylinder end caps), got %d',
+                        level_name, n_large_loops)
+        mesh = trimesh.Trimesh(sub_v, sub_f)
+        trimesh.repair.fix_normals(mesh)
+        sub_v, sub_f = mesh.vertices, mesh.faces
+
+        # Manifold + closed output guaranteed (raises if unreachable).
+        log.info('%s: make_manifold (canal mesh, max_iters=50)', level_name)
+        canal_v, canal_f = make_manifold(sub_v, sub_f, max_iters=50)
         t_cleanup = time() - t0
 
         # inflate canal mesh
@@ -362,18 +392,9 @@ class ErrorComputer:
         return canal_v, canal_f, elapsed, sections
 
 
-def main():
-    """CLI entry point for accuracy computation (step 07). Called by spinescrews-accuracy console script."""
+def run_calculations(config):
+    """Run accuracy computation (step 07) for the given resolved pipeline config."""
     t0 = time()
-    import argparse
-    from spinescrews.tools.config import load_config, save_resolved_config
-
-    parser = argparse.ArgumentParser(description='Compute screw placement accuracy.')
-    parser.add_argument('specimen_dir', type=str)
-    args = parser.parse_args()
-
-    config = load_config(args.specimen_dir)
-    save_resolved_config(config)
 
     data_dir = expanduser(config.specimen_dir)
     analysis_dir = join(data_dir, config.output_dir)
@@ -461,9 +482,25 @@ def main():
             'elapsed_s': elapsed,
             'timings': timings,
         })
+        return df
 
     else:
         log.info('*** Step 07 (accuracy) already complete, skipping')
+        return pd.read_csv(join(acc_dir, 'results.csv'), index_col=0)
+
+
+def main():
+    """CLI entry point for accuracy computation (step 07). Called by spinescrews-accuracy console script."""
+    import argparse
+    from spinescrews.tools.config import load_config, save_resolved_config
+
+    parser = argparse.ArgumentParser(description='Compute screw placement accuracy.')
+    parser.add_argument('specimen_dir', type=str)
+    args = parser.parse_args()
+
+    config = load_config(args.specimen_dir)
+    save_resolved_config(config)
+    run_calculations(config)
 
 
 if __name__ == '__main__':

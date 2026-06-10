@@ -432,7 +432,7 @@ class Registrar:
         affreg = DiagnosticAffineRegistration(metric=MutualInformationMetric(nbins=64),
                                               factors=[3, 1],
                                               sigmas=[4, 0],
-                                              level_iters=[1000, 100],
+                                              level_iters=[1000, 1000],
                                               verbosity=VerbosityLevels.NONE,
                                               method=mi_method)
 

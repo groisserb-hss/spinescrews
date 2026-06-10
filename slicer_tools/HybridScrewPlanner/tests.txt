@@ -1,0 +1,49 @@
+                                                                                                                                                            
+  1. Self-tests (built-in)
+                                                                                                                                                            
+  In 3D Slicer's Python console or the testing framework:
+                                                                                                                                                            
+  1. Open 3D Slicer       
+  2. Make sure the module is loaded (add the HybridScrewPlanner folder to Slicer's module paths via Edit > Application Settings > Modules > Additional 
+  module paths, then restart)
+  3. Go to Testing > Self-Tests > HybridScrewPlanner and click "Run"
+
+  Or run from the Python Interactor (Ctrl+3 / View > Python Interactor):
+
+  tester = slicer.selfTests["HybridScrewPlanner"]
+  tester()
+
+  This runs the five tests: test_UpdateScrewFromLine, test_GatherExportRows, test_ScrewTypeRoundTrip, test_NameValidation, test_DeleteModelForLine.
+
+  2. Manual functional testing
+
+  Once the module is loaded, verify these scenarios from the plan:
+
+  Test: Basic workflow
+  Steps: Switch to module, create a Markups Line, place 2 points, select it in the dropdown — cylinder should appear and auto-update as you drag points
+  ────────────────────────────────────────
+  Test: Scene close
+  Steps: File > Close Scene — should not crash, status resets to "Ready."
+  ────────────────────────────────────────
+  Test: Module switching
+  Steps: Switch away and back — cylinder should still update, no duplicate observers
+  ────────────────────────────────────────
+  Test: Color picker
+  Steps: Click "Set cylinder color" — button background should show the chosen color
+  ────────────────────────────────────────
+  Test: Screw type + reload
+  Steps: Set "Screw type" to Polyaxial on one line and Headless on another; re-select the first — the dropdown, length, and radius should show that line's saved values
+  ────────────────────────────────────────
+  Test: Export
+  Steps: Name lines <level><side> (e.g. T11L/T11R), pick a screw type for each, click "Export all line coordinates..." — the saved CSV has a screw_type column; the log warns about invalid names or levels missing an L/R partner
+  ────────────────────────────────────────
+  Test: Delete
+  Steps: Click "Delete cylinder for selected line" — cylinder removed
+  ────────────────────────────────────────
+  Test: Reload
+  Steps: In Python console: slicer.modules.HybridScrewPlannerWidget.self().onReload() — no stale signal errors
+
+  Prerequisites
+
+  The only prerequisite is 3D Slicer itself (5.x+). The module is a pure scripted module — no build step, no external dependencies. Just point Slicer at the
+   folder and restart.

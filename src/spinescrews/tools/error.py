@@ -17,6 +17,17 @@ from spinescrews.tools import ScrewMeasures, BreachMeasures, MeshLabels, dimR, d
 log = logging.getLogger(__name__)
 
 
+def signed_distance_to_mesh(point, mesh_v, mesh_f):
+    """Signed Euclidean distance from a 3D point to a closed mesh.
+
+    Negative = inside the mesh, positive = outside.
+    """
+    pt = np.atleast_2d(point).astype(np.float64)
+    s, _, _ = igl.signed_distance(pt, mesh_v, mesh_f,
+                                  sign_type=igl.SIGNED_DISTANCE_TYPE_FAST_WINDING_NUMBER)
+    return float(s)
+
+
 def align_to_screw(pt0, pt1, v3=np.array([0., 0., 1.])):
     """Build a 4x4 frame aligned to a screw axis (pt0→pt1), used by measure_screw_error and normalize_to_left."""
     pt0 = pt0.reshape([1, 3])

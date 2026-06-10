@@ -16,15 +16,14 @@ dependencies = [
     "libigl", "trimesh", "plyfile", "manifold3d",
     "shapely", "rtree",
     "matplotlib",
-    "joblib", "tqdm", "transforms3d",
-    "openpyxl", "pyyaml", "python-igraph",
-    "bg3dtools",
+    "joblib", "pyyaml", "python-igraph",
+    "bg3dtools[mesh,viz,graph]",
     "PyMaxflow",
-    "cma",
 ]
 
 [project.optional-dependencies]
 fast = ["embreex"]
+torch = ["bg3dtools[torch]"]
 templates = ["tensorflow", "jax", "jaxlib"]
 
 [project.scripts]

@@ -11,10 +11,10 @@ Tested on macOS and Linux. Python >= 3.10.
 ## Environment Setup
 
 ```bash
-conda env create --file environment.yml
+conda env create --file environment.yml                # bootstrap-only env: python 3.10 + pip (+ pydicom, ipython)
 conda activate screws310
 pip install -e '/path/to/bg3dtools[mesh,viz,graph]'   # external dep (provides bg3dtools + spectral_match)
-pip install -e .                                       # install spinescrews in editable mode
+pip install -e .                                       # spinescrews + all Python deps (pyproject.toml is the single dep source)
 ```
 
 If `triangle` fails via pip: `git clone --recurse-submodules https://github.com/drufat/triangle.git && cd triangle && python setup.py install`

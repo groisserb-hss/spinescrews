@@ -4,23 +4,9 @@ channels:
   - defaults
 dependencies:
   - python=3.10
-  - numpy #=1.26
-  - pandas #
-  - pip #=21.2.4
-  - scikit-learn #=0.24.2
-  - scipy #=1.7.1
-  - scikit-image #==0.18.3
-  - nibabel
-  - pydicom
-  - dipy
-  - plyfile
-  - trimesh
-  - ipython
-  - shapely
-  - python-igraph
-  - matplotlib
-  - pyyaml
-  - rtree
-  - pip:
-    - libigl  # on maxos arm64
-    - manifold3d
+  - pip
+  # Bootstrap-only by design: every dependency of the spinescrews package is
+  # declared in pyproject.toml and installed by `pip install -e .` — do not
+  # duplicate package deps here.
+  - pydicom  # for dicom_tools/burn_screw_endpoints.py, which runs outside the installed package
+  - ipython  # developer REPL convenience

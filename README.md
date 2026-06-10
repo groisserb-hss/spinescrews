@@ -34,8 +34,9 @@ conda env create --file environment.yml
 conda activate screws310
 ```
 
-This builds an environment named `screws310` (Python 3.10 plus the core scientific libraries) and
-activates it. Run `conda activate screws310` in every new terminal before using the pipeline.
+This builds a minimal environment named `screws310` (Python 3.10 and pip — the scientific
+libraries are installed by steps 4-5) and activates it. Run `conda activate screws310` in every
+new terminal before using the pipeline.
 
 ### 4. Install bg3dtools
 
@@ -58,7 +59,9 @@ in place.
 pip install -e .
 ```
 
-This makes the `spinescrews` package importable and installs the console scripts
+This installs the pipeline's Python dependencies (NumPy, SciPy, and the rest of the scientific
+stack, as declared in `pyproject.toml`), makes the `spinescrews` package importable, and installs
+the console scripts
 (`spinescrews-segment`, `spinescrews-preop`, `spinescrews-postop`, `spinescrews-align`,
 `spinescrews-accuracy`). Every command supports `--help`.
 

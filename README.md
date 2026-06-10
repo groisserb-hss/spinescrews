@@ -56,8 +56,12 @@ in place.
 ### 5. Install spinescrews
 
 ```bash
-pip install -e .
+pip install -e '.[fast]'
 ```
+
+The `[fast]` extra adds `embreex` (Embree-accelerated ray–mesh intersection), which markedly
+speeds up canal-mesh construction in the accuracy step; it installs as a prebuilt wheel, so no
+compiler is needed. Plain `pip install -e .` also works — that step is just slower.
 
 This installs the pipeline's Python dependencies (NumPy, SciPy, and the rest of the scientific
 stack, as declared in `pyproject.toml`), makes the `spinescrews` package importable, and installs

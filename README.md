@@ -130,6 +130,9 @@ specimen_XX/
     └── config_resolved.yml               # the exact settings used
 ```
 
+A ready-to-run instance of this layout ships in [`sample/`](sample/); see
+[Try it on the included sample data](#try-it-on-the-included-sample-data).
+
 ## Usage
 
 Before your first run, make sure you have:
@@ -145,6 +148,42 @@ Before your first run, make sure you have:
 - [ ] a screw plan exported to `preop_plan.csv` ([Screw planning](#screw-planning-3d-slicer))
 
 The pipeline then runs as numbered steps; every `spinescrews-*` command supports `--help`.
+
+### Try it on the included sample data
+
+The quickest way to confirm your install works end-to-end is to run the pipeline on the example
+specimen bundled in [`sample/`](sample/):
+
+| File | What it is |
+|------|------------|
+| `sample/preop.nii.gz` | pre-operative CT volume |
+| `sample/postop.nii.gz` | post-operative CT volume (screws implanted) |
+| `sample/preop_plan.csv` | 30 planned polyaxial screws (T2-L4, bilateral), in the Hybrid Screw Planner export format |
+
+Because the converted volumes and the plan are already provided, you can skip
+[Step 0](#step-0-dicom-preparation) (DICOM-to-NIfTI) and [screw planning](#screw-planning-3d-slicer),
+and you don't need the `dcm2niix` / `dcmdump` / `jq` tools from install step 6 — only install
+steps 1-5 and a segmentation backend (step 7). `sample/` already matches the
+[specimen layout](#specimen-directory-layout), so it doubles as the specimen directory:
+
+```bash
+# Step 1 — segment the vertebrae in the pre-op CT
+spinescrews-segment --input sample/preop.nii.gz --output_dir sample
+
+# Steps 2-6 — pre-op alignment, then post-op registration + screw detection
+spinescrews-align sample
+
+# Step 7 — planned-vs-detected accuracy
+spinescrews-accuracy sample
+```
+
+Segmentation runs on CPU by default and is the slow part on a volume this size; add `--device gpu`
+(or `--device mps` on Apple Silicon) and/or `--fast` to the first command to speed it up. On the
+very first run TotalSegmentator also downloads its model weights (~1.5 GB).
+
+Everything the pipeline produces lands in `sample/analysis/` (git-ignored, so it won't show up as
+repository changes) — the per-screw measurements in `sample/analysis/07_accuracy/results.csv`, with
+QC figures generated alongside each step. Delete `sample/analysis/` to start over.
 
 ### Screw planning (3D Slicer)
 

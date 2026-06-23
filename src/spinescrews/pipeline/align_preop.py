@@ -203,7 +203,10 @@ class Aligner:
           2. Parallel preprocessing + cache save + figure generation
           3. Parallel PMF matching + save correspondence matrices
         """
-        levels = self.preop_verts.keys()
+        # Only template-backed vertebrae get spectral correspondence. SA/CX (and C1/S2)
+        # are segmented and normalized for downstream use but have no template_*.ply,
+        # so they are excluded here — same possible_levels filter step 04 applies.
+        levels = [l for l in self.preop_verts if l in possible_levels]
         pmf_config = {"sigma": self.config.pmf_sigma, "gamma": self.config.pmf_gamma,
                       "iterations": self.config.pmf_iterations}
         dg_values = {}
@@ -594,7 +597,7 @@ def _run_preop(study, analysis_dir):
     elapsed = time() - t
     _log_elapsed('Normalization', elapsed)
 
-    from bg3dtools.render.o3d import run_isolated
+    from bg3dtools.render import run_isolated
     from spinescrews.figures.spine_template import generate_spine_construct
     run_isolated(generate_spine_construct, analysis_dir, study.template_dir, step='preop')
 
@@ -670,7 +673,7 @@ def _run_orient(study, analysis_dir):
     from spinescrews.figures.preop_orientation import generate_orientation_summary
     generate_orientation_summary(analysis_dir)
 
-    from bg3dtools.render.o3d import run_isolated
+    from bg3dtools.render import run_isolated
     from spinescrews.figures.spine_template import generate_spine_construct
     run_isolated(generate_spine_construct, analysis_dir, study.template_dir, step='orient')
 

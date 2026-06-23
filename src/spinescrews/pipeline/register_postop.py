@@ -16,6 +16,7 @@ from dipy.core.optimize import Optimizer
 
 from bg3dtools.transforms_unified import inverse
 
+from spinescrews.tools import possible_levels
 from spinescrews.tools.nifti_utils import compute_metal_threshold
 from spinescrews.tools.screw_models import parse_preop_plan, sanity_check_plan
 from spinescrews.tools.vertebrae import Vertebra
@@ -208,7 +209,12 @@ class Registrar:
         level_names = []
         for entry in sorted(os.listdir(step02_dir)):
             entry_dir = join(step02_dir, entry)
-            if isdir(entry_dir) and isfile(join(entry_dir, 'preop_affine.npy')):
+            # import_from_disk reconstructs each vertebra from its step-04 (orient) outputs.
+            # Only template-backed levels (possible_levels) go through correspondence/orient;
+            # SA/CX are normalized in step 02 but have no refined affine, so exclude them here
+            # (same filter steps 03 and 04 apply).
+            if (isdir(entry_dir) and entry in possible_levels
+                    and isfile(join(entry_dir, 'preop_affine.npy'))):
                 level_names.append(entry)
 
         log.info('Found %d levels from step 02: %s', len(level_names), ', '.join(level_names))

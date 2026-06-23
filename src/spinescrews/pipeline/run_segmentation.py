@@ -243,8 +243,10 @@ def main():
     inria_env = args.inria_env if args.inria_env is not None else cfg_inria_env
 
     output_dir = expanduser(args.output_dir)
-    logfile = join(output_dir, 'segmentation.log')
-    os.makedirs(output_dir, exist_ok=True)
+    from spinescrews.tools.paths import segmentation_dir
+    seg_step_dir = segmentation_dir(join(output_dir, 'analysis'))
+    os.makedirs(seg_step_dir, exist_ok=True)
+    logfile = join(seg_step_dir, 'segmentation.log')
     fh = logging.FileHandler(logfile, mode='w')
     fh.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stderr)

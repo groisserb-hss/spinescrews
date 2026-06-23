@@ -177,9 +177,8 @@ spinescrews-align sample
 spinescrews-accuracy sample
 ```
 
-Segmentation runs on CPU by default and is the slow part on a volume this size; add `--device gpu`
-(or `--device mps` on Apple Silicon) and/or `--fast` to the first command to speed it up. On the
-very first run TotalSegmentator also downloads its model weights (~1.5 GB).
+Segmentation runs on CPU by default; add `--device gpu` (or `--device mps` on Apple Silicon) and/or `--fast` 
+to the first command to speed it up. On the very first run TotalSegmentator also downloads its model weights (~1.5 GB).
 
 Everything the pipeline produces lands in `sample/analysis/` (git-ignored, so it won't show up as
 repository changes) — the per-screw measurements in `sample/analysis/07_accuracy/results.csv`, with

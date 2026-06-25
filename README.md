@@ -156,6 +156,19 @@ Before your first run, make sure you have:
 
 The pipeline then runs as numbered steps; every `spinescrews-*` command supports `--help`.
 
+**Each time you open a new terminal**, move into the repo and activate the environment before
+running anything:
+
+```bash
+cd /path/to/spinescrews      # the folder cloned in step 2
+conda activate screws310
+```
+
+Your prompt should then begin with `(screws310)`. The `spinescrews-*` commands work from any
+directory once the environment is active — a `command not found` error almost always means it
+isn't — while the relative `sample/…` and `dicom_tools/…` paths below assume you are in the repo
+root.
+
 ### Try it on the included sample data
 
 The quickest way to confirm your install works end-to-end is to run the pipeline on the example
@@ -171,7 +184,8 @@ Because the converted volumes and the plan are already provided, you can skip
 [Step 0](#step-0-dicom-preparation) (DICOM-to-NIfTI) and [screw planning](#screw-planning-3d-slicer),
 and you don't need the `dcm2niix` tool from install step 6 — only install
 steps 1-5 and a segmentation backend (step 7). `sample/` already matches the
-[specimen layout](#specimen-directory-layout), so it doubles as the specimen directory:
+[specimen layout](#specimen-directory-layout), so it doubles as the specimen directory. Run these
+from the repo root, with `screws310` active:
 
 ```bash
 # Step 1 — segment the vertebrae in the pre-op CT
@@ -190,6 +204,25 @@ to the first command to speed it up. On the very first run TotalSegmentator also
 Everything the pipeline produces lands in `sample/analysis/` (git-ignored, so it won't show up as
 repository changes) — the per-screw measurements in `sample/analysis/07_accuracy/results.csv`, with
 QC figures generated alongside each step. Delete `sample/analysis/` to start over.
+
+### Run on your own data
+
+Same three pipeline commands as the sample, but you supply the inputs first:
+
+1. **Convert DICOM → NIfTI** ([Step 0](#step-0-dicom-preparation)) — writes `preop.nii.gz` and
+   `postop.nii.gz` into your own `specimen_XX/` directory.
+2. **Plan the screws** ([Screw planning](#screw-planning-3d-slicer)) — export `preop_plan.csv`
+   into that same directory.
+3. **Run the pipeline** (with `screws310` active):
+
+   ```bash
+   spinescrews-segment --input /path/to/specimen_XX/preop.nii.gz --output_dir /path/to/specimen_XX
+   spinescrews-align    /path/to/specimen_XX     # steps 2-6
+   spinescrews-accuracy /path/to/specimen_XX     # step 7
+   ```
+
+Per-screw results land in `specimen_XX/analysis/07_accuracy/results.csv`. The per-step sections
+below cover each command's options (segmentation backend, running pre-op/post-op separately, etc.).
 
 ### Screw planning (3D Slicer)
 
@@ -240,16 +273,6 @@ pydicom codec (`pip install pylibjpeg pylibjpeg-libjpeg`, or `python-gdcm`).
 you. Just name each Markups line `<level><side>` (e.g. `T11L`, `L1R`); the
 planner warns at export about any name that doesn't match or any level missing
 its L/R partner (use a `Skip`-type line to stand in for an un-instrumented side).
-
-A backend-equivalence test suite lives in `dicom_tools/tests/` — it runs
-pure-math geometry checks by default; point `SCREWS_TEST_DICOM_DIR` at a CT
-series (and set `SCREWS_TEST_SITK=1`) to validate the pydicom backend against
-SimpleITK on real data:
-
-```bash
-SCREWS_TEST_DICOM_DIR=/path/to/ct_dicom_series SCREWS_TEST_SITK=1 \
-    python dicom_tools/tests/test_burn_screw_endpoints.py
-```
 
 ### Step 0: DICOM preparation
 

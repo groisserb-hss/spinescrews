@@ -7,8 +7,10 @@ errors relative to the planned trajectories and pedicle anatomy.
 
 ## Installation
 
-Tested on macOS and Linux (Windows is not tested). Run the commands below in a terminal, in
-order. Steps 3-7 are run **from the repo root** — the `spinescrews` folder created in step 2.
+Tested on macOS and Linux. Windows is not officially supported (untested), though the install
+and tools are cross-platform and expected to work — Windows-specific notes are flagged inline.
+Run the commands below in a terminal, in order. Steps 3-7 are run **from the repo root** — the
+`spinescrews` folder created in step 2.
 
 ### 1. Install Anaconda
 
@@ -40,14 +42,14 @@ new terminal before using the pipeline.
 
 ### 4. Install bg3dtools
 
-spinescrews depends on [bg3dtools](https://github.com/bgroisser/bg3dtools) (which provides the
+spinescrews depends on [bg3dtools](https://github.com/groisserb-hss/bg3dtools) (which provides the
 `bg3dtools` and `spectral_match` packages). Clone it **next to** the spinescrews folder — the
 `../` below keeps it out of this repository — and install it with the `mesh`, `viz`, and `graph`
 extras **before** installing spinescrews:
 
 ```bash
-git clone https://github.com/bgroisser/bg3dtools.git ../bg3dtools
-pip install -e '../bg3dtools[mesh,viz,graph]'
+git clone https://github.com/groisserb-hss/bg3dtools.git ../bg3dtools
+pip install -e "../bg3dtools[mesh,viz,graph]"
 ```
 
 `-e` is an "editable" install, so a later `git pull` inside `../bg3dtools/` updates the package
@@ -56,7 +58,7 @@ in place.
 ### 5. Install spinescrews
 
 ```bash
-pip install -e '.[fast]'
+pip install -e ".[fast]"
 ```
 
 The `[fast]` extra adds `embreex` (Embree-accelerated ray–mesh intersection), which markedly
@@ -69,16 +71,16 @@ the console scripts
 (`spinescrews-segment`, `spinescrews-preop`, `spinescrews-postop`, `spinescrews-align`,
 `spinescrews-accuracy`). Every command supports `--help`.
 
-### 6. External command-line tools
+### 6. External command-line tool
 
-These are used only for the DICOM-to-NIfTI conversion in [Step 0](#step-0-dicom-preparation)
-(macOS via Homebrew, Linux via apt):
+The Step 0 survey/conversion scripts are pure Python (they use `pydicom`, already installed), so
+the only external tool needed is **dcm2niix**, for the actual DICOM-to-NIfTI conversion:
 
 | Tool | Purpose | Install |
 |------|---------|---------|
-| `dcm2niix` | DICOM-to-NIfTI conversion | `brew install dcm2niix` or `apt install dcm2niix` |
-| `dcmdump` | DICOM tag inspection | Part of [DCMTK](https://dicom.offis.de/dcmtk/) (`brew install dcmtk` / `apt install dcmtk`) |
-| `jq` | JSON processing for DICOM survey | `brew install jq` / `apt install jq` |
+| `dcm2niix` | DICOM-to-NIfTI conversion | `conda install -c conda-forge dcm2niix` (any OS) — or `brew install dcm2niix` / `apt install dcm2niix` |
+
+(`dcmdump` and `jq` are no longer required: the survey step reads DICOM headers directly.)
 
 ### 7. Segmentation backend
 
@@ -91,12 +93,17 @@ weights (~1.5 GB) download automatically on first use:
 bash src/spinescrews/tools/totalseg_segmentor/setup.sh
 ```
 
+On Windows (no bash), run `pip install TotalSegmentator` directly — that is all `setup.sh` does,
+plus a smoke test — or run the script under Git Bash.
+
 **Inria** (alternative, CC-BY-NC-SA-4.0) — creates a **separate** conda environment named
 `verse20`. You do not activate it yourself; `spinescrews-segment --backend inria` calls it for you.
 
 ```bash
 bash src/spinescrews/tools/inria_segmentor/setup.sh
 ```
+
+On Windows, run this under Git Bash or WSL (it provisions a separate conda environment).
 
 See [src/spinescrews/tools/totalseg_segmentor/README.md](src/spinescrews/tools/totalseg_segmentor/README.md) and
 [src/spinescrews/tools/inria_segmentor/README.md](src/spinescrews/tools/inria_segmentor/README.md) for details.
@@ -142,7 +149,7 @@ Before your first run, make sure you have:
 - [ ] the `screws310` environment created and activated (step 3)
 - [ ] bg3dtools installed (step 4)
 - [ ] spinescrews installed, so the `spinescrews-*` commands work (step 5)
-- [ ] `dcm2niix`, `dcmdump`, and `jq` installed (step 6)
+- [ ] `dcm2niix` installed (step 6)
 - [ ] one segmentation backend set up (step 7)
 - [ ] CT scans converted to `preop.nii.gz` / `postop.nii.gz` ([Step 0](#step-0-dicom-preparation))
 - [ ] a screw plan exported to `preop_plan.csv` ([Screw planning](#screw-planning-3d-slicer))
@@ -162,7 +169,7 @@ specimen bundled in [`sample/`](sample/):
 
 Because the converted volumes and the plan are already provided, you can skip
 [Step 0](#step-0-dicom-preparation) (DICOM-to-NIfTI) and [screw planning](#screw-planning-3d-slicer),
-and you don't need the `dcm2niix` / `dcmdump` / `jq` tools from install step 6 — only install
+and you don't need the `dcm2niix` tool from install step 6 — only install
 steps 1-5 and a segmentation backend (step 7). `sample/` already matches the
 [specimen layout](#specimen-directory-layout), so it doubles as the specimen directory:
 
@@ -247,25 +254,27 @@ SCREWS_TEST_DICOM_DIR=/path/to/ct_dicom_series SCREWS_TEST_SITK=1 \
 
 ### Step 0: DICOM preparation
 
-Use `survey_dicoms.sh` to scan your DICOM directories and build a metadata index:
+These two scripts run as plain Python (`pydicom` + `dcm2niix`) — no bash — so they work on
+Windows, macOS, and Linux. Use `survey_dicoms.py` to scan your DICOM directories and build a
+metadata index:
 
 ```bash
-dicom_tools/survey_dicoms.sh -o metadata.json /path/to/dicom_dir1 /path/to/dicom_dir2
+python dicom_tools/survey_dicoms.py -o metadata.json /path/to/dicom_dir1 /path/to/dicom_dir2
 ```
 
-Then use `convert_to_nii.sh` to extract matching series as NIfTI. You can filter
-by any DICOM field (case-insensitive substring match), or run it without filters
+Then use `convert_to_nii.py` to extract matching series as NIfTI. You can filter
+by any series field (case-insensitive substring match), or run it without filters
 for an interactive selection menu:
 
 ```bash
 # Extract pre-op CT (filter by series description)
-dicom_tools/convert_to_nii.sh metadata.json /path/to/specimen_XX preop series_description:"BONE STD"
+python dicom_tools/convert_to_nii.py metadata.json /path/to/specimen_XX preop series_description:"BONE STD"
 
 # Extract post-op CT
-dicom_tools/convert_to_nii.sh metadata.json /path/to/specimen_XX postop series_description:"MAZOR BONE"
+python dicom_tools/convert_to_nii.py metadata.json /path/to/specimen_XX postop series_description:"MAZOR BONE"
 
 # Interactive mode (no filters — presents a selection menu)
-dicom_tools/convert_to_nii.sh metadata.json /path/to/specimen_XX preop
+python dicom_tools/convert_to_nii.py metadata.json /path/to/specimen_XX preop
 ```
 
 This produces `preop.nii.gz` and `postop.nii.gz` in the specimen directory.

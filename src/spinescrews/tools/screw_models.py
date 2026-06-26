@@ -125,8 +125,8 @@ def sanity_check_plan(screws: list[Screw], length_thresh: float = 0.5) -> None:
 
     Raises ValueError with all collected errors if any check fails.
     """
-    entry_pts = np.row_stack([S.planned_entry for S in screws])
-    tip_pts = np.row_stack([S.planned_tip for S in screws])
+    entry_pts = np.vstack([S.planned_entry for S in screws])
+    tip_pts = np.vstack([S.planned_tip for S in screws])
 
     # --- Step 1: orientation-independent checks ---
     errors = []
@@ -170,8 +170,8 @@ def sanity_check_plan(screws: list[Screw], length_thresh: float = 0.5) -> None:
             screw.planned_entry[0:2] *= -1
             screw.planned_tip[0:2] *= -1
         # recompute arrays after LPS→RAS fix
-        entry_pts = np.row_stack([S.planned_entry for S in screws])
-        tip_pts = np.row_stack([S.planned_tip for S in screws])
+        entry_pts = np.vstack([S.planned_entry for S in screws])
+        tip_pts = np.vstack([S.planned_tip for S in screws])
 
     # --- Step 3: orientation detection via R-axis ---
     # In RAS, supine: left screws at negative R, right at positive R
@@ -758,8 +758,8 @@ class PolyAxial(Screw):
         head_v, head_f = Screw.build_cylinder(self.head_rad, head_a, head_b)
 
         # combine cylinders
-        verts = np.row_stack([shaft_v, head_v])
-        faces = np.row_stack([shaft_f, head_f + len(shaft_v)])
+        verts = np.vstack([shaft_v, head_v])
+        faces = np.vstack([shaft_f, head_f + len(shaft_v)])
         return verts, faces
 
     def pack_params(self, planned: bool = True) -> np.ndarray:

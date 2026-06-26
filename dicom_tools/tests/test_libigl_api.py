@@ -1,6 +1,6 @@
 """Drift guard: the installed libigl must expose the 2.5.x API the pipeline uses.
 
-spinescrews/pyproject.toml and bg3dtools/pyproject.toml pin ``libigl==2.5.0``
+spinescrews/pyproject.toml and bg3dtools/pyproject.toml pin ``libigl==2.5.1``
 specifically because the 2.6.x line changed this surface in ways that break the
 pipeline — and some breaks are SILENT (changed return arity consumed positionally
 via ``[1:3]``). Concretely, against a unit tetrahedron:
@@ -45,7 +45,7 @@ _F = np.array([[0, 2, 1], [0, 1, 3], [1, 2, 3], [2, 0, 3]], dtype=np.int64)
 _Q = np.array([[0.25, 0.25, 0.25], [2.0, 2.0, 2.0]], dtype=np.float64)
 
 _PIN_HINT = ("libigl has drifted from the 2.5.x API spinescrews targets; the pin "
-             "is `libigl==2.5.0` in spinescrews/ and bg3dtools/ pyproject.toml")
+             "is `libigl==2.5.1` in spinescrews/ and bg3dtools/ pyproject.toml")
 
 
 def _igl():

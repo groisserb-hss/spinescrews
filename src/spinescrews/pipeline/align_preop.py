@@ -21,7 +21,7 @@ from spinescrews.tools.screw_models import parse_preop_plan, sanity_check_plan
 from spinescrews.tools.vertebrae import Vertebra
 from spinescrews.tools.correspondence_tools import load_vertebral_template
 from spinescrews.tools import seg_val, val_seg, possible_levels
-from spinescrews.tools.paths import (segmentation_dir, segmentation_file,
+from spinescrews.tools.paths import (setup_logging, segmentation_dir, segmentation_file,
                          preop_dir, preop_level_dir,
                          correspondence_dir, correspondence_level_dir,
                          orient_dir, orient_level_dir,
@@ -178,7 +178,7 @@ class Aligner:
             if len(screws) > 0:
                 entry = [S.planned_entry for S in screws]
                 tip = [S.planned_tip for S in screws]
-                planned_midpt = np.nanmean(np.row_stack([entry, tip]), axis=0)
+                planned_midpt = np.nanmean(np.vstack([entry, tip]), axis=0)
                 if np.linalg.norm(affine[:3, 3] - planned_midpt) >= 50:
                     raise ValueError('Vertebra %s not close to planned screw' % level_name)
 
@@ -786,11 +786,7 @@ def main():
     os.makedirs(analysis_dir, exist_ok=True)
 
     logfile = join(analysis_dir, 'preop.log')
-    fh = logging.FileHandler(logfile, mode='w')
-    fh.setLevel(logging.DEBUG)
-    sh = logging.StreamHandler(sys.stderr)
-    sh.setLevel(logging.DEBUG if config.debug else logging.INFO)
-    logging.basicConfig(level=logging.DEBUG, force=True, handlers=[fh, sh])
+    setup_logging(logfile, debug=config.debug)
 
     log.info('*' * (31 + len(data_dir)))
     log.info('**  Preop alignment for %s  **' % data_dir)

@@ -13,7 +13,7 @@ dependencies = [
     "numpy", "scipy", "pandas",
     "scikit-learn", "scikit-image",
     "nibabel", "dipy",
-    "libigl==2.5.0", "trimesh", "plyfile", "manifold3d",
+    "libigl==2.5.1", "trimesh", "plyfile", "manifold3d",
     "shapely", "rtree",
     "matplotlib",
     "joblib", "pyyaml", "python-igraph",

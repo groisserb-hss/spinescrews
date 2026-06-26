@@ -112,10 +112,10 @@ def load_screws(preop_level_dir, reg_level_dir, det_dir, level):
     with open(os.path.join(det_dir, level + 'R_screw.yml'), 'r') as file:
         right_screw = yaml.safe_load(file)
 
-    planned = np.row_stack([left_screw['planned_entry'], left_screw['planned_tip'],
+    planned = np.vstack([left_screw['planned_entry'], left_screw['planned_tip'],
                             right_screw['planned_entry'], right_screw['planned_tip']])
 
-    detected = np.row_stack([left_screw['detected_entry'], left_screw['detected_tip'],
+    detected = np.vstack([left_screw['detected_entry'], left_screw['detected_tip'],
                              right_screw['detected_entry'], right_screw['detected_tip']])
 
     # load and apply transformation matrices

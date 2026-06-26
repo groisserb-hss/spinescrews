@@ -119,7 +119,7 @@ class InstrumentedSpine(Articulated):
         self.screw_clouds = []
         for ss, screw in enumerate(screws):
             vertebral_tform = spine_tforms[screw.level]
-            posed_pts = np.row_stack([screw.planned_entry, screw.planned_tip])
+            posed_pts = np.vstack([screw.planned_entry, screw.planned_tip])
             unposed_pts = transform_points_inverse(vertebral_tform, posed_pts)
             self.plan_screw_trans[ss] = unposed_pts[0]
             self.verts[ss, 1] = unposed_pts[1] - unposed_pts[0]
@@ -172,7 +172,7 @@ class InstrumentedSpine(Articulated):
         for pts, tform in zip(rest_pts, screw_affs):
             posed_pts.append(transform_points_forward(tform, pts))
 
-        return np.row_stack(posed_pts)
+        return np.vstack(posed_pts)
 
     @property
     def nV(self) -> int:
@@ -222,8 +222,8 @@ class InstrumentedSpine(Articulated):
         screw_rel_affs = parent_inv @ screw_abs_affs
         screw_theta, screw_trans = extract_params(screw_rel_affs)
 
-        theta = np.row_stack([vert_theta, screw_theta])
-        trans = np.row_stack([vert_trans, screw_trans])
+        theta = np.vstack([vert_theta, screw_theta])
+        trans = np.vstack([vert_trans, screw_trans])
         return self.vectorize_params(theta, trans)
 
     def initialize_alignment(self, pts: np.ndarray, density: np.ndarray,
@@ -242,8 +242,8 @@ class InstrumentedSpine(Articulated):
         n_jobs : int
             Number of parallel threads for ICP trials (1 = sequential).
         """
-        rest_theta = np.row_stack([self.plan_spine_theta, self.plan_screw_theta])
-        rest_trans = np.row_stack([self.plan_spine_trans, self.plan_screw_trans])
+        rest_theta = np.vstack([self.plan_spine_theta, self.plan_screw_theta])
+        rest_trans = np.vstack([self.plan_spine_trans, self.plan_screw_trans])
         abs_affs = rel_params_to_aff(self.trunk, rest_theta, rest_trans)
         template_pts = self.build_model(abs_affs).reshape([self.num_screws, 2, 3])
         # robust error distance determined by average shaft length

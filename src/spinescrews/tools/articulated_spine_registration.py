@@ -73,7 +73,7 @@ def align_spine_to_CT(preop_verts: dict[str, Vertebra], postop_img: nib.Nifti1Im
     ## Step 2: Prepare post-op data
     thresh_dict = {name: thresh for name, thresh in zip(level_names, thresh_list)}
     thresh_list =[thresh_dict[s.level] for s in screws]
-    init_bonepts = np.row_stack(spine.build_landmarks(initial_affs))
+    init_bonepts = np.vstack(spine.build_landmarks(initial_affs))
     metal_thresh = compute_metal_threshold(postop_img.get_fdata())
     with timed('build_artifact_mask', timings):
         artifact_mask = _build_artifact_mask_fast(postop_img, screws, metal_threshold=metal_thresh)
@@ -134,8 +134,8 @@ def align_spine_to_CT(preop_verts: dict[str, Vertebra], postop_img: nib.Nifti1Im
             c = (np.array(default_colors[jj % len(default_colors)]) * 255).astype(np.uint8)
             model_rgb.append(np.tile(c, (len(posed), 1)))
         write_colored_plyfile(os.path.join(output_dir, 'icp_model.ply'),
-                              np.row_stack(model_pts), empty_faces,
-                              v_rgb=np.row_stack(model_rgb))
+                              np.vstack(model_pts), empty_faces,
+                              v_rgb=np.vstack(model_rgb))
         log.info('Saved ICP point clouds to %s', output_dir)
 
     return {name: aff for name, aff in zip(level_names, icp_affs)}, metrics, artifact_mask
@@ -227,8 +227,8 @@ def extract_postop_pts(postop_img: nib.Nifti1Image, screws: list[Screw],
         verts, faces = np.zeros([0, 3]), np.zeros([0, 3], dtype=int)
         for screw in screws:
             v, f = screw.build_mesh(planned=False)
-            faces = np.row_stack([faces, f + len(verts)])
-            verts = np.row_stack([verts, v])
+            faces = np.vstack([faces, f + len(verts)])
+            verts = np.vstack([verts, v])
         verts, faces = np.ascontiguousarray(verts), np.ascontiguousarray(faces)
         with timed('winding_number'):
             w = igl.winding_number(verts, faces, pts)
@@ -409,7 +409,7 @@ def _build_artifact_mask(postop_img, screws, screw_proximity_mm=50.0, metal_thre
     if not screw_verts:
         log.warning('No non-skip screws; returning empty artifact mask')
         return np.zeros(data.shape, dtype=bool)
-    screw_pts = np.row_stack(screw_verts)
+    screw_pts = np.vstack(screw_verts)
     screw_tree = KDTree(screw_pts)
 
     # Vectorized proximity filtering: find which labels have any voxel near screws
@@ -477,7 +477,7 @@ def _build_artifact_mask_fast(postop_img, screws, screw_proximity_mm=20.0,
     if not screw_verts:
         log.warning('No non-skip screws; returning empty artifact mask')
         return np.zeros(data.shape, dtype=bool)
-    screw_tree = KDTree(np.row_stack(screw_verts))
+    screw_tree = KDTree(np.vstack(screw_verts))
 
     cc_struct = ndi.generate_binary_structure(3, 3)  # 26-connectivity
     labels, n_labels = ndi.label(metal_mask, structure=cc_struct)
@@ -646,7 +646,7 @@ def articulated_registration(spine: Spine, postop_pts: np.ndarray,
     for k in range(nJ - 1):
         J_reg[3 * k:3 * (k + 1), 6 * k:6 * (k + 2)] = 1       # twist diff
         J_reg[3 * (nJ - 1) + k, 6 * k:6 * (k + 2)] = 1         # trans diff
-    J_sparse = np.row_stack([J_sparse, J_reg])
+    J_sparse = np.vstack([J_sparse, J_reg])
     with timed('least_squares (articulated ICP)'):
         result = least_squares(cost_fun, init_params, method='trf', verbose=0, ftol=0.01, jac_sparsity=J_sparse)
     opt_loss = float(np.sum(cost_fun(result.x)**2))
@@ -760,7 +760,7 @@ def _adaptive_postop_pts(postop_img, spine, icp_affs,
         posed = transform_points_forward(icp_affs[jj], spine.landmarks[jj])
         all_posed.append(posed)
         posed_owner.append(np.full(len(posed), jj, dtype=int))
-    all_posed = np.row_stack(all_posed)
+    all_posed = np.vstack(all_posed)
     posed_owner = np.concatenate(posed_owner)
 
     # Global bounding box around all posed landmarks + margin

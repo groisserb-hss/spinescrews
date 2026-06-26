@@ -13,6 +13,7 @@ successfully and can be skipped on re-run.
 import json
 import logging
 import os
+import sys
 import time
 from contextlib import contextmanager
 from os.path import join, isfile
@@ -25,6 +26,25 @@ STEP_ORIENT = '04_orient'
 STEP_DETECTION = '05_detection'
 STEP_REGISTRATION = '06_registration'
 STEP_ACCURACY = '07_accuracy'
+
+
+def setup_logging(logfile, debug=False):
+    """Configure root logging: a UTF-8 file handler plus a stderr stream handler.
+
+    Forcing UTF-8 keeps non-ASCII characters in log messages (->, deg, mm^3,
+    sigma, ...) from raising UnicodeEncodeError on Windows consoles and log files
+    that default to cp1252. ``debug`` controls only the console verbosity; the
+    log file always records DEBUG.
+    """
+    try:
+        sys.stderr.reconfigure(encoding='utf-8', errors='backslashreplace')
+    except (AttributeError, ValueError):
+        pass  # stream doesn't support reconfigure (already wrapped / redirected)
+    fh = logging.FileHandler(logfile, mode='w', encoding='utf-8')
+    fh.setLevel(logging.DEBUG)
+    sh = logging.StreamHandler(sys.stderr)
+    sh.setLevel(logging.DEBUG if debug else logging.INFO)
+    logging.basicConfig(level=logging.DEBUG, force=True, handlers=[fh, sh])
 
 
 # ---------------------------------------------------------------------------

@@ -48,9 +48,9 @@ def align_to_screw(pt0, pt1, v3=np.array([0., 0., 1.])):
     v3 /= np.sqrt(np.sum(v3 ** 2))
     v1 = np.cross(v2, v3)
 
-    tform = np.row_stack((v1, v2, v3)).T
+    tform = np.vstack((v1, v2, v3)).T
     tform = np.column_stack((tform, pt0.T))
-    tform = np.row_stack((tform, [0, 0, 0, 1]))
+    tform = np.vstack((tform, [0, 0, 0, 1]))
 
     return tform
 
@@ -100,8 +100,8 @@ def measure_screw_error(screw, ped_y, use_anatomic_axis=False):
     SCREW_AXIS = not use_anatomic_axis
     l_y = screw.shaft_len
 
-    planned_pts = np.row_stack([screw.planned_entry, screw.planned_tip])
-    detected_pts = np.row_stack([screw.detected_entry, screw.detected_tip])
+    planned_pts = np.vstack([screw.planned_entry, screw.planned_tip])
+    detected_pts = np.vstack([screw.detected_entry, screw.detected_tip])
 
     if screw.name[-1] == 'R':
         planned_pts[:, dimR] *= -1

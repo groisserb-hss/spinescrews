@@ -27,7 +27,7 @@ from spinescrews.tools.screw_models import parse_preop_plan, sanity_check_plan, 
 from spinescrews.tools.error import distance_to_pedicle, measure_screw_error, align_to_screw, signed_distance_to_mesh
 from bg3dtools.mesh.mesh_io import read_colored_plyfile
 from spinescrews.tools.vertebrae import Vertebra
-from spinescrews.tools.paths import (preop_level_dir, correspondence_level_dir,
+from spinescrews.tools.paths import (setup_logging, preop_level_dir, correspondence_level_dir,
                          orient_level_dir,
                          detection_dir, registration_level_dir,
                          accuracy_dir, breach_mesh_dir, step_complete, write_summary, timed)
@@ -136,7 +136,7 @@ class ErrorComputer:
 
         # apply affine transformations to normalize screw positions
         for screw in screws:
-            planned_pts = np.row_stack([screw.planned_entry, screw.planned_tip])
+            planned_pts = np.vstack([screw.planned_entry, screw.planned_tip])
             tform_preop = self.preop_verts[screw.level].affine
             planned_pts = transform_points_inverse(tform_preop, planned_pts)
 
@@ -144,7 +144,7 @@ class ErrorComputer:
             screw.planned_tip = planned_pts[1]
 
             if screw.type != 'skip':
-                detected_pts = np.row_stack([screw.detected_entry, screw.detected_tip])
+                detected_pts = np.vstack([screw.detected_entry, screw.detected_tip])
                 tform_postop = self.postop_verts[screw.level].affine
                 detected_pts = transform_points_inverse(tform_postop, detected_pts)
 
@@ -237,7 +237,7 @@ class ErrorComputer:
 
         # Transform closest points back to world space:
         # 1. undo align_to_screw  2. undo R-mirror  3. normalized → world
-        closest_pts = transform_points_forward(ntl_tform, np.row_stack([ped_pt, screw_pt]))
+        closest_pts = transform_points_forward(ntl_tform, np.vstack([ped_pt, screw_pt]))
         if screw.name[-1] == 'R':
             closest_pts[:, dimR] *= -1
         closest_pts = transform_points_forward(bone.affine, closest_pts)
@@ -256,8 +256,8 @@ class ErrorComputer:
 
     def normalize_to_left(self, screw: Screw, vertebra: Vertebra, canal_mesh: tuple) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
         """Mirror right screws to left side, align to planned screw axis, return transformed geometry."""
-        planned = np.row_stack([screw.planned_entry, screw.planned_tip])
-        detected = np.row_stack([screw.detected_entry, screw.detected_tip])
+        planned = np.vstack([screw.planned_entry, screw.planned_tip])
+        detected = np.vstack([screw.detected_entry, screw.detected_tip])
         bone_v, bone_f = vertebra.verts.copy(), vertebra.faces
         canal_v, canal_f = canal_mesh[0].copy(), canal_mesh[1]
         labels = self.template_labels[screw.level]
@@ -399,11 +399,7 @@ def run_calculations(config):
     data_dir = expanduser(config.specimen_dir)
     analysis_dir = join(data_dir, config.output_dir)
     logfile = join(analysis_dir, 'compute_accuracy.log')
-    fh = logging.FileHandler(logfile, mode='w')
-    fh.setLevel(logging.DEBUG)
-    sh = logging.StreamHandler(sys.stderr)
-    sh.setLevel(logging.INFO)
-    logging.basicConfig(level=logging.DEBUG, force=True, handlers=[fh, sh])
+    setup_logging(logfile)
 
     log.info('*' * (31 + len(data_dir)))
     log.info('**  Computing accuracy for %s  **' % data_dir)

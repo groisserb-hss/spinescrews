@@ -199,7 +199,7 @@ def _build_anatomical_frame(plane, midpoint, body_pts, z_up):
     x_vec = np.cross(y_vec, z_vec)
 
     tform = np.eye(4)
-    tform[:3, :3] = np.row_stack((x_vec, y_vec, z_vec)).T
+    tform[:3, :3] = np.vstack((x_vec, y_vec, z_vec)).T
     tform[:3, 3] = midpoint
     return tform
 
@@ -473,7 +473,7 @@ class Vertebra:
             output_aff[:, 3] = [-50, -50, -60, 1]
 
         aff_map = AffineMap(affine, domain_grid_shape=dimensions, domain_grid2world=output_aff)
-        label_crop = aff_map.transform(image.get_fdata(), sampling, image.affine)
+        label_crop = aff_map.transform(image.get_fdata(), interpolation=sampling, image_grid2world=image.affine)
         return nib.Nifti1Image(label_crop, output_aff)
 
     @staticmethod
@@ -556,7 +556,7 @@ class Vertebra:
 
             # minimum cycle basis: elementary cycles only (no composites)
             mcb_raw = graph.minimum_cycle_basis()
-            coords = np.row_stack(graph.vs.get_attribute_values('coord'))
+            coords = np.vstack(graph.vs.get_attribute_values('coord'))
 
             if mcb_raw:
                 all_cycles = [_mcb_to_ordered_vertices(graph, eidxs) for eidxs in mcb_raw]
@@ -613,7 +613,7 @@ class Vertebra:
                 best_loop_verts, best_cycles, best_coords, best_graph)
             log.debug('pruned %d non-canal loop nodes, %d support pts remain', n_pruned, len(support_pts))
         else:
-            support_pts = np.row_stack(best_graph.vs.get_attribute_values('coord'))
+            support_pts = np.vstack(best_graph.vs.get_attribute_values('coord'))
             log.debug('no cycles to prune; using full skeleton (%d pts)', len(support_pts))
 
         log.info('canal_loop done in %.1fs: cost=%.3f at iter %d (%d pts, %d support)',

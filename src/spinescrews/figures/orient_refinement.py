@@ -72,7 +72,8 @@ def generate_orient_summary(analysis_dir):
     cmap = plt.cm.RdYlBu  # red=0 (low anchor), blue=1 (high anchor)
     colors = [cmap(a) for a in anchors]
 
-    fig, (ax_rot, ax_trans) = plt.subplots(2, 1, figsize=(max(8, n), 6), sharex=True)
+    fig, (ax_rot, ax_trans) = plt.subplots(2, 1, figsize=(max(8, n), 6), sharex=True,
+                                           constrained_layout=True)
 
     x = np.arange(n)
 
@@ -107,7 +108,6 @@ def generate_orient_summary(analysis_dir):
     cbar.set_label('Anchor weight', fontsize=9)
 
     fig.suptitle('Step 04: Orientation Refinement', fontsize=12)
-    plt.tight_layout(rect=[0, 0, 0.92, 0.95])
 
     step_dir = orient_dir(analysis_dir)
     os.makedirs(step_dir, exist_ok=True)

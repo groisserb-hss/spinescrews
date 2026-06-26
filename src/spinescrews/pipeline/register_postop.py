@@ -63,10 +63,10 @@ class DiagnosticAffineRegistration(AffineRegistration):
         original_moving_shape = self.moving_ss.get_image(0).shape
         original_moving_grid2world = self.moving_ss.get_affine(0)
         affine_map = AffineMap(None,
-                               original_static_shape,
-                               original_static_grid2world,
-                               original_moving_shape,
-                               original_moving_grid2world)
+                               domain_grid_shape=original_static_shape,
+                               domain_grid2world=original_static_grid2world,
+                               codomain_grid_shape=original_moving_shape,
+                               codomain_grid2world=original_moving_grid2world)
 
         use_gradient = self.method in _GRADIENT_METHODS
 
@@ -78,10 +78,10 @@ class DiagnosticAffineRegistration(AffineRegistration):
             current_static_shape = self.static_ss.get_domain_shape(level)
             current_static_grid2world = self.static_ss.get_affine(level)
             current_affine_map = AffineMap(None,
-                                           current_static_shape,
-                                           current_static_grid2world,
-                                           original_static_shape,
-                                           original_static_grid2world)
+                                           domain_grid_shape=current_static_shape,
+                                           domain_grid2world=current_static_grid2world,
+                                           codomain_grid_shape=original_static_shape,
+                                           codomain_grid2world=original_static_grid2world)
             current_static = current_affine_map.transform(smooth_static)
             current_static_mask = None
             if self.static_mask is not None:
@@ -91,9 +91,11 @@ class DiagnosticAffineRegistration(AffineRegistration):
             current_moving = self.moving_ss.get_image(level)
 
             self.metric.setup(transform, current_static, current_moving,
-                              current_static_grid2world,
-                              original_moving_grid2world, self.starting_affine,
-                              current_static_mask, self.moving_mask)
+                              static_grid2world=current_static_grid2world,
+                              moving_grid2world=original_moving_grid2world,
+                              starting_affine=self.starting_affine,
+                              static_mask=current_static_mask,
+                              moving_mask=self.moving_mask)
 
             if self.options is None:
                 self.options = {'gtol': 1e-4, 'disp': False}

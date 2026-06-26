@@ -119,7 +119,7 @@ def _render_two_panel(geoms, all_verts, title, legend_patches, out_path):
 
     # Right lateral view
     center = all_verts.mean(axis=0)
-    extent = all_verts.ptp(axis=0)
+    extent = np.ptp(all_verts, axis=0)
     eye_lat = center + np.array([extent[0] * 2, 0, 0])
     up_lat = np.array([0, 0, 1])
     img_lat = _render_scene(geoms, center, eye_lat, up_lat, W, H)
@@ -228,8 +228,8 @@ def generate_spine_construct(analysis_dir, template_dir, step='preop'):
         if step == 'orient' and os.path.isfile(scale_file):
             scale = float(np.load(scale_file))
         else:
-            seg_diag = np.linalg.norm(v_seg.ptp(axis=0))
-            tmpl_diag = np.linalg.norm(v_tmpl.ptp(axis=0))
+            seg_diag = np.linalg.norm(np.ptp(v_seg, axis=0))
+            tmpl_diag = np.linalg.norm(np.ptp(v_tmpl, axis=0))
             scale = seg_diag / tmpl_diag if tmpl_diag > 1e-9 else 1.0
 
         v_tmpl_scaled = (v_tmpl - v_tmpl.mean(axis=0)) * scale + v_seg.mean(axis=0)

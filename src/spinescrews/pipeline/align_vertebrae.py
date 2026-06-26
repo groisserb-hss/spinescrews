@@ -8,7 +8,7 @@ from os.path import join, expanduser
 import logging
 from time import time
 
-from spinescrews.tools.paths import (segmentation_dir, preop_dir, correspondence_dir,
+from spinescrews.tools.paths import (setup_logging, segmentation_dir, preop_dir, correspondence_dir,
                          orient_dir, detection_dir, registration_dir,
                          step_complete, read_summary)
 
@@ -138,11 +138,7 @@ def main():
     os.makedirs(analysis_dir, exist_ok=True)
 
     logfile = join(analysis_dir, 'pipeline.log')
-    fh = logging.FileHandler(logfile, mode='w')
-    fh.setLevel(logging.DEBUG)
-    sh = logging.StreamHandler(sys.stderr)
-    sh.setLevel(logging.DEBUG if config.debug else logging.INFO)
-    logging.basicConfig(level=logging.DEBUG, force=True, handlers=[fh, sh])
+    setup_logging(logfile, debug=config.debug)
 
     log.info('*' * (31 + len(data_dir)))
     log.info('**  Aligning vertebrae for %s  **' % data_dir)

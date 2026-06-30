@@ -26,6 +26,7 @@ from spinescrews.tools.paths import (preop_dir, preop_level_dir,
                          orient_dir, orient_level_dir,
                          detection_dir, registration_dir, registration_level_dir,
                          step_complete, write_summary, read_summary, timed)
+from spinescrews.figures import safe_figure
 
 import matplotlib
 matplotlib.use('Agg')
@@ -502,8 +503,8 @@ def _run_detection(study, analysis_dir, config):
     # plan-vs-detected needs screw YAMLs on disk (written by study.detect_screws)
     with timed('detection_plan_vs_detected', timings):
         from spinescrews.figures.detection_plan_vs_detected import generate_detection_plan_vs_detected
-        generate_detection_plan_vs_detected(analysis_dir, study.working_dir,
-                                            threshold=config.screw_detect_threshold)
+        safe_figure(generate_detection_plan_vs_detected, analysis_dir, study.working_dir,
+                    threshold=config.screw_detect_threshold)
 
     # Check shaft coverage QC — warn after figures so they exist for debugging
     if detection_metrics:
@@ -551,7 +552,7 @@ def _run_registration(study, analysis_dir, config):
 
     with timed('CT_figures', timings):
         from spinescrews.figures.CT_visualization import generate_ct_figures
-        generate_ct_figures(analysis_dir, getattr(study, '_postop_volumes', None))
+        safe_figure(generate_ct_figures, analysis_dir, getattr(study, '_postop_volumes', None))
 
     elapsed = time() - t
 

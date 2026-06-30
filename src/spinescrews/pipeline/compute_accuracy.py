@@ -31,6 +31,7 @@ from spinescrews.tools.paths import (setup_logging, preop_level_dir, corresponde
                          orient_level_dir,
                          detection_dir, registration_level_dir,
                          accuracy_dir, breach_mesh_dir, step_complete, write_summary, timed)
+from spinescrews.figures import safe_figure
 
 log = logging.getLogger(__name__)
 
@@ -451,14 +452,16 @@ def run_calculations(config):
         ped_ml = study.screw_results[placed_idx, 3]  # ped_x = M-L
         ped_si = study.screw_results[placed_idx, 4]  # ped_z = S-I
 
-        # Generate breach figures
+        # Generate breach figures (guarded: a figure failure must not prevent
+        # the gate below from marking step 07 complete with results.csv present)
         with timed('breach_figures', timings):
             from spinescrews.figures.visualize_breach import generate_breach_figure
+            n_figs = 0
             for screw in placed:
                 level = screw.level
                 side = screw.name[-1]
-                generate_breach_figure(analysis_dir, level, side)
-        log.info('    generated %d breach figures', len(placed))
+                n_figs += safe_figure(generate_breach_figure, analysis_dir, level, side)
+        log.info('    generated %d/%d breach figures', n_figs, len(placed))
 
         elapsed = round(time() - t0, 1)
         log.info('Accuracy complete: %d screws, %d breached, %.1fs total',

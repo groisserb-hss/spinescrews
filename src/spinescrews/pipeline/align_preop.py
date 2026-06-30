@@ -26,6 +26,7 @@ from spinescrews.tools.paths import (setup_logging, segmentation_dir, segmentati
                          correspondence_dir, correspondence_level_dir,
                          orient_dir, orient_level_dir,
                          step_complete, write_summary, read_summary)
+from spinescrews.figures import safe_figure
 
 import matplotlib
 matplotlib.use('Agg')
@@ -266,7 +267,7 @@ class Aligner:
             # generate preprocessing figure
             from spinescrews.figures.correspondence_preprocess import generate_preprocess_figure
             fig_path = join(corr_dir, 'preprocess.png')
-            generate_preprocess_figure(gen1_lr, level_name, fig_path)
+            safe_figure(generate_preprocess_figure, gen1_lr, level_name, fig_path)
 
         # Load from cache for cached_levels
         for level_name in cached_levels:
@@ -284,7 +285,7 @@ class Aligner:
             fig_path = join(corr_dir, 'preprocess.png')
             if not isfile(fig_path):
                 from spinescrews.figures.correspondence_preprocess import generate_preprocess_figure
-                generate_preprocess_figure(gen1_lr, level_name, fig_path)
+                safe_figure(generate_preprocess_figure, gen1_lr, level_name, fig_path)
 
         # ── Phase 3: parallel PMF matching + save ─────────────────
         pmf_levels = list(preprocessed.keys())
@@ -366,9 +367,9 @@ class Aligner:
             label_dir = join(self.template_dir, 'labels', level_name)
             fig_path = join(corr_dir, 'match.png')
             seg_v_norm = normalize_mesh(raw_v, raw_f)[0]
-            generate_match_figure(template_hr.v, template_hr.f,
-                                  seg_v_norm, raw_f,
-                                  template2seg, label_dir, level_name, fig_path)
+            safe_figure(generate_match_figure, template_hr.v, template_hr.f,
+                        seg_v_norm, raw_f,
+                        template2seg, label_dir, level_name, fig_path)
 
         if dg_values:
             dgs = [m['dg'] for m in dg_values.values()]
@@ -581,7 +582,7 @@ def _run_import(study, analysis_dir, data_dir):
         })
 
     from spinescrews.figures.seg_overlay import generate_seg_overlay
-    generate_seg_overlay(analysis_dir, data_dir)
+    safe_figure(generate_seg_overlay, analysis_dir, data_dir)
 
 
 def _run_preop(study, analysis_dir):
@@ -668,10 +669,10 @@ def _run_orient(study, analysis_dir):
     _log_elapsed('Orientation refinement', elapsed)
 
     from spinescrews.figures.orient_refinement import generate_orient_summary
-    generate_orient_summary(analysis_dir)
+    safe_figure(generate_orient_summary, analysis_dir)
 
     from spinescrews.figures.preop_orientation import generate_orientation_summary
-    generate_orientation_summary(analysis_dir)
+    safe_figure(generate_orientation_summary, analysis_dir)
 
     from bg3dtools.render import run_isolated
     from spinescrews.figures.spine_template import generate_spine_construct

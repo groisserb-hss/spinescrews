@@ -4,7 +4,6 @@ import os
 import logging
 import numpy as np
 import igl
-import open3d as o3d
 import matplotlib
 if not matplotlib.is_interactive():
     matplotlib.use('Agg')
@@ -12,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
 from bg3dtools.render.o3d import trisurfsm, scatt, anterior_camera
+from bg3dtools.render import render_frame, CameraParams, RenderStyle, _RawGeom, RenderUnavailable
 from spinescrews.tools import possible_levels
 from spinescrews.tools.paths import preop_dir, preop_level_dir, orient_dir, orient_level_dir
 
@@ -23,8 +23,9 @@ _SEG_COLOR = np.array([0.85, 0.85, 0.85])
 def _render_scene(geoms, lookat, eye, up, w, h, fov=45.0):
     """Render a list of (geometry, shader) tuples to an RGB uint8 image.
 
-    Tries OffscreenRenderer (headless) first, falls back to legacy Visualizer
-    on platforms without EGL support (e.g. macOS).
+    Delegates to the unified renderer (``bg3dtools.render.scan.render_frame``),
+    which owns the single offscreen→legacy→RenderUnavailable fallback chain, so
+    this figure shares one render implementation with the rest of the codebase.
 
     Parameters
     ----------
@@ -42,57 +43,19 @@ def _render_scene(geoms, lookat, eye, up, w, h, fov=45.0):
     -------
     np.ndarray
         RGB uint8 image.
+
+    Raises
+    ------
+    RenderUnavailable
+        If no Open3D backend (offscreen or legacy) is usable on this host.
     """
-    lookat = np.asarray(lookat, dtype=np.float64)
-    eye = np.asarray(eye, dtype=np.float64)
-    up = np.asarray(up, dtype=np.float64)
-
-    try:
-        return _render_scene_offscreen(geoms, lookat, eye, up, w, h, fov)
-    except Exception:
-        return _render_scene_legacy(geoms, lookat, eye, up, w, h)
-
-
-def _render_scene_offscreen(geoms, lookat, eye, up, w, h, fov):
-    """OffscreenRenderer path (headless, EGL-based)."""
-    import open3d.visualization.rendering as rendering
-
-    renderer = rendering.OffscreenRenderer(w, h)
-    renderer.scene.set_background(np.array([1, 1, 1, 1], dtype=np.float32))
-
-    for i, (geom, shader) in enumerate(geoms):
-        mat = rendering.MaterialRecord()
-        mat.shader = shader
-        if shader == "defaultUnlit" and isinstance(geom, o3d.geometry.PointCloud):
-            mat.point_size = 3.0
-        renderer.scene.add_geometry("geom_%d" % i, geom, mat)
-
-    renderer.setup_camera(fov, lookat, eye, up)
-    img = np.asarray(renderer.render_to_image()).copy()
-    renderer.scene.clear_geometry()
-    return img
-
-
-def _render_scene_legacy(geoms, lookat, eye, up, w, h):
-    """Legacy Visualizer fallback (works on macOS without EGL)."""
-    vis = o3d.visualization.Visualizer()
-    vis.create_window(width=w, height=h, visible=False)
-    opt = vis.get_render_option()
-    opt.background_color = np.array([1, 1, 1])
-    opt.point_size = 3.0
-
-    for geom, _shader in geoms:
-        vis.add_geometry(geom)
-
-    ctr = vis.get_view_control()
-    ctr.set_lookat(lookat)
-    ctr.set_front(eye - lookat)
-    ctr.set_up(up)
-    vis.poll_events()
-    vis.update_renderer()
-    img = np.asarray(vis.capture_screen_float_buffer(do_render=True))
-    vis.destroy_window()
-    return (np.clip(img, 0, 1) * 255).astype(np.uint8)
+    specs = [_RawGeom(geom, hint=('point' if shader == 'defaultUnlit' else 'mesh'))
+             for geom, shader in geoms]
+    cam = CameraParams(lookat=np.asarray(lookat, np.float32),
+                       eye=np.asarray(eye, np.float32),
+                       up=np.asarray(up, np.float32), fov=float(fov))
+    return render_frame(specs, cam, width=w, height=h,
+                        style=RenderStyle(point_size=3.0))
 
 
 def _render_two_panel(geoms, all_verts, title, legend_patches, out_path):
@@ -290,33 +253,40 @@ def generate_spine_construct(analysis_dir, template_dir, step='preop'):
     tmpl_patches = [Patch(color=level_colors[l], label=l)
                     for l in levels if l in level_colors]
 
-    # 1. Seg only
-    _render_two_panel(
-        seg_geoms, all_verts,
-        'Seg meshes — %s' % step_label,
-        None,
-        os.path.join(step_dir, 'spine_seg.png'))
-    log.info('Saved spine_seg.png to %s', step_dir)
-
-    # 2. Template only
-    if tmpl_mesh_geoms:
+    # Render diagnostic PNGs. If no Open3D backend is usable (headless host with
+    # neither EGL nor a display), skip the images — the PLYs above are the
+    # durable output and are already on disk.
+    try:
+        # 1. Seg only
         _render_two_panel(
-            tmpl_mesh_geoms, all_verts,
-            'Template meshes — %s' % step_label,
-            tmpl_patches,
-            os.path.join(step_dir, 'spine_template.png'))
-        log.info('Saved spine_template.png to %s', step_dir)
+            seg_geoms, all_verts,
+            'Seg meshes — %s' % step_label,
+            None,
+            os.path.join(step_dir, 'spine_seg.png'))
+        log.info('Saved spine_seg.png to %s', step_dir)
 
-    # 3. Overlay: seg solid + template point cloud
-    if tmpl_pc_geoms:
-        overlay_geoms = seg_geoms + tmpl_pc_geoms
-        overlay_patches = [Patch(color=_SEG_COLOR, label='seg')] + tmpl_patches
-        _render_two_panel(
-            overlay_geoms, all_verts,
-            'Overlay (seg + template) — %s' % step_label,
-            overlay_patches,
-            os.path.join(step_dir, 'spine_overlay.png'))
-        log.info('Saved spine_overlay.png to %s', step_dir)
+        # 2. Template only
+        if tmpl_mesh_geoms:
+            _render_two_panel(
+                tmpl_mesh_geoms, all_verts,
+                'Template meshes — %s' % step_label,
+                tmpl_patches,
+                os.path.join(step_dir, 'spine_template.png'))
+            log.info('Saved spine_template.png to %s', step_dir)
+
+        # 3. Overlay: seg solid + template point cloud
+        if tmpl_pc_geoms:
+            overlay_geoms = seg_geoms + tmpl_pc_geoms
+            overlay_patches = [Patch(color=_SEG_COLOR, label='seg')] + tmpl_patches
+            _render_two_panel(
+                overlay_geoms, all_verts,
+                'Overlay (seg + template) — %s' % step_label,
+                overlay_patches,
+                os.path.join(step_dir, 'spine_overlay.png'))
+            log.info('Saved spine_overlay.png to %s', step_dir)
+    except RenderUnavailable as exc:
+        log.warning('spine construct: no Open3D render backend (%s); '
+                    'saved PLYs but skipping PNGs', exc)
 
 
 if __name__ == '__main__':

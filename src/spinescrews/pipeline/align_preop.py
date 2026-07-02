@@ -599,8 +599,10 @@ def _run_preop(study, analysis_dir):
     _log_elapsed('Normalization', elapsed)
 
     from bg3dtools.render import run_isolated
+    from spinescrews.figures import probe_render_backends
     from spinescrews.figures.spine_template import generate_spine_construct
-    run_isolated(generate_spine_construct, analysis_dir, study.template_dir, step='preop')
+    run_isolated(generate_spine_construct, analysis_dir, study.template_dir,
+                 step='preop', dead_backends=probe_render_backends())
 
     write_summary(step_dir, {
         'n_computed': len(study.preop_verts) - num_loaded,
@@ -675,8 +677,10 @@ def _run_orient(study, analysis_dir):
     safe_figure(generate_orientation_summary, analysis_dir)
 
     from bg3dtools.render import run_isolated
+    from spinescrews.figures import probe_render_backends
     from spinescrews.figures.spine_template import generate_spine_construct
-    run_isolated(generate_spine_construct, analysis_dir, study.template_dir, step='orient')
+    run_isolated(generate_spine_construct, analysis_dir, study.template_dir,
+                 step='orient', dead_backends=probe_render_backends())
 
     write_summary(step_dir, {
         'per_level': metrics,

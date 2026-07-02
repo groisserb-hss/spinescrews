@@ -106,7 +106,7 @@ def _render_two_panel(geoms, all_verts, title, legend_patches, out_path):
     plt.close()
 
 
-def generate_spine_construct(analysis_dir, template_dir, step='preop'):
+def generate_spine_construct(analysis_dir, template_dir, step='preop', dead_backends=()):
     """Build full-spine construct, save PLY and render 3 PNGs.
 
     Produces three 2-panel (anterior + lateral) figures:
@@ -123,7 +123,16 @@ def generate_spine_construct(analysis_dir, template_dir, step='preop'):
     step : str
         'preop' uses 02_preop/{LEVEL}/preop_affine.npy,
         'orient' uses 04_orient/{LEVEL}/preop_affine-refined.npy.
+    dead_backends : iterable of str
+        Render-backend names the parent process already found unusable (from
+        ``spinescrews.figures.probe_render_backends``). This function runs in a
+        ``run_isolated`` subprocess; seeding them here lets it skip those backends
+        instead of re-probing, so Open3D's native "EGL Headless" error isn't
+        reprinted per subprocess.
     """
+    from spinescrews.figures import seed_dead_backends
+    seed_dead_backends(dead_backends)
+
     # Discover levels with preop_gen1.ply, ordered by possible_levels
     levels = []
     for level in possible_levels:

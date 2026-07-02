@@ -13,7 +13,9 @@
 - group_statistics: Cross-specimen error analysis
 """
 
+import functools
 import logging
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -37,3 +39,53 @@ def safe_figure(fn, *args, **kwargs):
         log.warning('figure %s failed; continuing without it',
                     getattr(fn, '__name__', repr(fn)), exc_info=True)
         return False
+
+
+@functools.lru_cache(maxsize=1)
+def probe_render_backends() -> frozenset:
+    """Probe the Open3D render backends ONCE in this process; return the names found unusable.
+
+    On a headless host (e.g. Windows without EGL) Open3D's offscreen/legacy engines print a native
+    "EGL Headless is not supported" error to stderr *before* raising. ``bg3dtools``'s dispatcher
+    memoizes a dead backend so it prints at most once per process -- but every ``run_isolated``
+    render subprocess is a fresh process that re-probes. Probing once here in the parent and handing
+    the result to those subprocesses (see :func:`seed_dead_backends`) collapses a whole pipeline run
+    down to a single probe.
+
+    No-op on macOS: offscreen isn't used there, and probing would pull the legacy Visualizer into the
+    main process -- exactly what ``run_isolated`` exists to avoid. Any failure is swallowed; a probe
+    must never affect the pipeline.
+    """
+    if sys.platform == 'darwin':
+        return frozenset()
+    try:
+        import numpy as np
+        import bg3dtools.render.scan as scan
+        from bg3dtools.render import render_frame, CameraParams, Mesh
+        v = np.array([[0., 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]])  # non-degenerate (3D extent)
+        f = np.array([[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]], dtype=np.int64)
+        cam = CameraParams(lookat=np.array([0.25, 0.25, 0.25], np.float32),
+                           eye=np.array([2, 2, 2], np.float32),
+                           up=np.array([0, 0, 1], np.float32), fov=45.0)
+        try:
+            render_frame([Mesh(vertices=v, faces=f)], cam, width=16, height=16)
+        except Exception:
+            pass  # a dead backend is the point of the probe; scan._dead_backends now records it
+        return frozenset(scan._dead_backends)
+    except Exception:
+        return frozenset()
+
+
+def seed_dead_backends(names) -> None:
+    """Pre-mark render backends the parent already found dead (from :func:`probe_render_backends`).
+
+    Call at the top of a ``run_isolated`` child so it skips those backends instead of re-probing --
+    avoiding a repeat of Open3D's native stderr error in each render subprocess.
+    """
+    if not names:
+        return
+    try:
+        import bg3dtools.render.scan as scan
+        scan._dead_backends.update(names)
+    except Exception:
+        pass

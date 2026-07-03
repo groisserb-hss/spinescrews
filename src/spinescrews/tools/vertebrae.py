@@ -25,7 +25,7 @@ from scipy.stats import mode
 from scipy import sparse
 
 
-from bg3dtools.mesh.utils import per_vertex_smoothing, per_vertex_normals, get_genus, surface_sample, submesh, mesh_volume
+from bg3dtools.mesh.utils import per_vertex_smoothing, per_vertex_normals, get_genus, surface_sample, submesh, mesh_volume, as_igl_faces
 from bg3dtools.mesh.barycentric import bc2sparse
 from bg3dtools.mesh.mesh_io import read_triangle_mesh, read_colored_plyfile
 from bg3dtools.mesh.registration import nonrigid_ICP, surface_match
@@ -207,6 +207,7 @@ def _build_anatomical_frame(plane, midpoint, body_pts, z_up):
 def _extract_surface(seg_mask, pitch, trans):
     """Marching cubes -> largest manifold patch -> winding fix -> smooth -> genus."""
     verts, faces, _, _ = marching_cubes(seg_mask, spacing=pitch)
+    faces = as_igl_faces(faces)  # marching_cubes gives int32 faces on Windows; keep igl calls int64
     p = igl.extract_manifold_patches(faces)
     verts, faces, f_idx, v_idx = submesh(verts, faces, p[1] == mode(p[1])[0])
     verts += trans

@@ -316,7 +316,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Group statistics and scatter plots",
         epilog="example: python -m spinescrews.figures.group_statistics "
-               "--base_dir ~/Documents/ScrewAccuracyCT "
+               "--base_dir /path/to/specimens "
                "--out_dir results --group 'mazor:07,10,02[L2-T5]' --group 'freehand:04,25'",
     )
     parser.add_argument("--base_dir", type=str, required=True, help="Base directory containing specimen folders")

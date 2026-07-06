@@ -174,3 +174,11 @@ def timed(label, timings=None):
     _timing_log.info('  %-40s  %7.1fs' % (label, elapsed))
     if timings is not None:
         timings[label] = round(elapsed, 2)
+
+
+def log_elapsed(label, elapsed):
+    """Log an elapsed duration, auto-scaling to seconds (< 1 min) or minutes."""
+    if elapsed < 60:
+        _timing_log.info('*** %s took %.2f seconds' % (label, elapsed))
+    else:
+        _timing_log.info('*** %s took %.2f minutes' % (label, elapsed / 60))

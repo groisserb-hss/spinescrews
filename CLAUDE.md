@@ -45,7 +45,7 @@ spinescrews-align /path/to/specimen_XX        # steps 02-06 (preop + postop comb
 spinescrews-accuracy /path/to/specimen_XX     # step 07
 ```
 
-Flags: `--backend totalseg|inria`, `--device cpu|gpu|mps`, `--fast`, `--debug`.
+Flags: `spinescrews-segment` takes `--backend totalseg|inria`, `--device cpu|gpu|mps`, and `--fast`; the alignment scripts (`-preop`/`-postop`/`-align`) take `--debug` and `--n-jobs`, and `-align` also takes `--no-patches`. Every command supports `--help`.
 
 Re-generate any figure standalone: `python -m spinescrews.figures.<module_name> /path/to/specimen_XX [--level T11] [--side L] [--step preop|orient]`
 

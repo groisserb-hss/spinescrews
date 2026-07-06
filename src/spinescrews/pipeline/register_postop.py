@@ -1,5 +1,4 @@
 import os
-import sys
 from os.path import join, expanduser, isfile, isdir
 import logging
 from time import time
@@ -22,7 +21,7 @@ from spinescrews.tools.screw_models import parse_preop_plan, sanity_check_plan
 from spinescrews.tools.vertebrae import Vertebra
 from spinescrews.tools.screw_detection import detect_screws
 from spinescrews.tools.articulated_spine_registration import align_spine_to_CT, _build_artifact_mask_fast
-from spinescrews.tools.paths import (preop_dir, preop_level_dir,
+from spinescrews.tools.paths import (setup_logging, log_elapsed as _log_elapsed, preop_dir, preop_level_dir,
                          orient_dir, orient_level_dir,
                          detection_dir, registration_dir, registration_level_dir,
                          step_complete, write_summary, read_summary, timed)
@@ -478,14 +477,6 @@ class Registrar:
         return final_tform, diagnostics
 
 
-def _log_elapsed(label, elapsed):
-    """Log elapsed time in seconds or minutes."""
-    if elapsed < 60:
-        log.info('*** %s took %.2f seconds' % (label, elapsed))
-    else:
-        log.info('*** %s took %.2f minutes' % (label, elapsed / 60))
-
-
 def _run_detection(study, analysis_dir, config):
     """Step 05: screw detection + MIP figures."""
     step_dir = detection_dir(analysis_dir)
@@ -668,11 +659,7 @@ def main():
     analysis_dir = join(data_dir, config.output_dir)
 
     logfile = join(analysis_dir, 'postop.log')
-    fh = logging.FileHandler(logfile, mode='w')
-    fh.setLevel(logging.DEBUG)
-    sh = logging.StreamHandler(sys.stderr)
-    sh.setLevel(logging.DEBUG if config.debug else logging.INFO)
-    logging.basicConfig(level=logging.DEBUG, force=True, handlers=[fh, sh])
+    setup_logging(logfile, debug=config.debug)
 
     log.info('*' * (35 + len(data_dir)))
     log.info('**  Postop registration for %s  **' % data_dir)

@@ -1,6 +1,5 @@
 import os
-import sys
-from os.path import join, basename, expanduser, isdir, isfile
+from os.path import join, basename, expanduser, isfile
 import logging
 from time import time
 
@@ -21,7 +20,7 @@ from spinescrews.tools.screw_models import parse_preop_plan, sanity_check_plan
 from spinescrews.tools.vertebrae import Vertebra
 from spinescrews.tools.correspondence_tools import load_vertebral_template
 from spinescrews.tools import seg_val, val_seg, possible_levels
-from spinescrews.tools.paths import (setup_logging, segmentation_dir, segmentation_file,
+from spinescrews.tools.paths import (setup_logging, log_elapsed as _log_elapsed, segmentation_dir, segmentation_file,
                          preop_dir, preop_level_dir,
                          correspondence_dir, correspondence_level_dir,
                          orient_dir, orient_level_dir,
@@ -558,14 +557,6 @@ class Aligner:
         return metrics
 
 
-def _log_elapsed(label, elapsed):
-    """Log elapsed time in seconds or minutes."""
-    if elapsed < 60:
-        log.info('*** %s took %.2f seconds' % (label, elapsed))
-    else:
-        log.info('*** %s took %.2f minutes' % (label, elapsed / 60))
-
-
 def _run_import(study, analysis_dir, data_dir):
     """Import data + segmentation overlay figure."""
     t = time()
@@ -738,11 +729,11 @@ def _preop_summary(analysis_dir):
         log.info('%d warning(s) found -- review before trusting results' % len(warnings))
         log.info('=' * 40)
     else:
-        log.info('=== Preop steps completed cleanly (steps 01-04) ===')
+        log.info('=== Preop steps completed cleanly (steps 02-04) ===')
 
 
 def run_preop(config):
-    """Run preop alignment steps 01-04 from a config object.
+    """Run preop alignment steps 02-04 from a config object.
 
     Callable by the orchestrator (align_vertebrae.py) without CLI arg parsing.
     Returns early if step 04 is already complete.
@@ -764,14 +755,14 @@ def run_preop(config):
 
 
 def main():
-    """CLI entry point for preop alignment (steps 01-04). Called by spinescrews-preop console script."""
+    """CLI entry point for preop alignment (steps 02-04). Called by spinescrews-preop console script."""
     t0 = time()
     import argparse
     from spinescrews.tools.config import (load_config, save_resolved_config,
                                           add_common_pipeline_args, overrides_from_args)
 
     parser = argparse.ArgumentParser(
-        description='Preop alignment (steps 01-04): genus-1 mesh extraction, spectral template '
+        description='Preop alignment (steps 02-04): genus-1 mesh extraction, spectral template '
                     'correspondence, and Whittaker-smoothed orientation refinement. Requires '
                     'preop.nii.gz, preop_plan.csv, and segmentation output (run '
                     'spinescrews-segment first). Outputs go to <specimen_dir>/analysis/.')

@@ -1,9 +1,8 @@
-"""Thin orchestrator: runs preop alignment (steps 01-04) then postop registration (steps 05-06).
+"""Thin orchestrator: runs preop alignment (steps 02-04) then postop registration (steps 05-06).
 
 For preop-only or postop-only runs, use align_preop.py or register_postop.py directly.
 """
 import os
-import sys
 from os.path import join, expanduser
 import logging
 from time import time
@@ -12,8 +11,8 @@ from spinescrews.tools.paths import (setup_logging, segmentation_dir, preop_dir,
                          orient_dir, detection_dir, registration_dir,
                          step_complete, read_summary)
 
-from spinescrews.pipeline.align_preop import Aligner, run_preop
-from spinescrews.pipeline.register_postop import Registrar, run_postop
+from spinescrews.pipeline.align_preop import run_preop
+from spinescrews.pipeline.register_postop import run_postop
 
 log = logging.getLogger(__name__)
 
@@ -102,18 +101,18 @@ def _executive_summary(analysis_dir):
         log.info('%d warning(s) found -- review before trusting results' % len(warnings))
         log.info('=' * 40)
     else:
-        log.info('=== Pipeline completed cleanly (steps 01-06) ===')
+        log.info('=== Pipeline completed cleanly (steps 02-06) ===')
 
 
 def main():
-    """CLI entry point for full pipeline (steps 01-06). Called by spinescrews-align console script."""
+    """CLI entry point for full pipeline (steps 02-06). Called by spinescrews-align console script."""
     t0 = time()
     import argparse
     from spinescrews.tools.config import (load_config, save_resolved_config,
                                           add_common_pipeline_args, overrides_from_args)
 
     parser = argparse.ArgumentParser(
-        description='Full per-specimen pipeline (steps 01-06): preop normalization, template '
+        description='Full per-specimen pipeline (steps 02-06): preop normalization, template '
                     'correspondence, orientation refinement, screw detection, and articulated '
                     'registration. Requires preop.nii.gz, postop.nii.gz, preop_plan.csv, and '
                     'segmentation output (run spinescrews-segment first). Outputs go to '

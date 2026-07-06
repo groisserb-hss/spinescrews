@@ -1,5 +1,4 @@
 import os
-import sys
 import logging
 from os.path import join, expanduser
 from time import time
@@ -9,14 +8,11 @@ import numpy as np
 import pandas as pd
 import igl
 import trimesh
-from scipy.stats import mode
 
 from scipy import sparse
-from spinescrews.tools import ScrewMeasures, BreachMeasures, MeshLabels, dimR, dimA, dimS, possible_levels
-from bg3dtools.transforms_unified import transform_points_inverse, transform_points_forward, make_aff
+from spinescrews.tools import ScrewMeasures, BreachMeasures, MeshLabels, dimR, dimA, possible_levels
+from bg3dtools.transforms_unified import transform_points_inverse, transform_points_forward
 from bg3dtools.mesh.utils import per_face_normals, submesh, per_vertex_normals, per_vertex_smoothing
-from bg3dtools.pointclouds.quantize import voxelize, convert_to_points, sparse_quantize
-from bg3dtools.pointclouds.fitting import project_to_line, project_to_plane
 from spectral_match.pipeline import Mesh
 from bg3dtools.mesh.clean import (
     remove_ears, largest_patch,
@@ -29,7 +25,7 @@ from bg3dtools.mesh.mesh_io import read_colored_plyfile
 from spinescrews.tools.vertebrae import Vertebra
 from spinescrews.tools.paths import (setup_logging, preop_level_dir, correspondence_level_dir,
                          orient_level_dir,
-                         detection_dir, registration_level_dir,
+                         detection_dir, registration_dir, registration_level_dir,
                          accuracy_dir, breach_mesh_dir, step_complete, write_summary, timed)
 from spinescrews.figures import safe_figure
 
@@ -70,6 +66,20 @@ class ErrorComputer:
             missing.append('%s — analysis directory (run align_vertebrae.py first)' % self.analysis_dir)
         if missing:
             raise FileNotFoundError('missing required files:\n  ' + '\n  '.join(missing))
+
+        # Accuracy (step 07) consumes the detection (05) and registration (06) outputs.
+        # Verify those steps completed, so a not-yet-run pipeline fails here with a clear,
+        # actionable message rather than a cryptic FileNotFoundError on the first
+        # per-screw/-level file loaded below.
+        incomplete = [name for name, done in (
+            ('05_detection', step_complete(detection_dir(self.analysis_dir))),
+            ('06_registration', step_complete(registration_dir(self.analysis_dir))),
+        ) if not done]
+        if incomplete:
+            raise FileNotFoundError(
+                'accuracy needs completed %s under %s — run `spinescrews-align %s` '
+                '(or spinescrews-postop) first' %
+                (' and '.join(incomplete), self.analysis_dir, self.specimen_dir))
 
         # load planned screw positions
         level_names, screws = parse_preop_plan(plan_file)
@@ -382,7 +392,7 @@ class ErrorComputer:
 
         result = canal_mesh.difference(bone_mesh, check_volume=False)
         if isinstance(result, trimesh.Scene):
-            result = result.dump(concatenate=True)
+            result = result.to_geometry()
         canal_v, canal_f = largest_patch(result.vertices, result.faces)
         t_boolean = time() - t0
 

@@ -17,10 +17,9 @@ from scipy.spatial.distance import cdist
 
 from bg3dtools.transforms_unified import transform_points_forward, transform_points_inverse
 from bg3dtools.mesh.utils import submesh, join_meshes
-from bg3dtools.pointclouds.fitting import align_axes
 
 from spinescrews.tools.screw_models import Screw
-from spinescrews.tools import ScrewMeasures, BreachMeasures, MeshLabels, dimR, dimA, dimS
+from spinescrews.tools import ScrewMeasures, dimR, dimA, dimS
 
 log = logging.getLogger(__name__)
 
@@ -36,11 +35,11 @@ def signed_distance_to_mesh(point, mesh_v, mesh_f):
     return float(s)
 
 
-def align_to_screw(pt0, pt1, v3=np.array([0., 0., 1.])):
+def align_to_screw(pt0, pt1, v3=(0., 0., 1.)):
     """Build a 4x4 frame aligned to a screw axis (pt0→pt1), used by measure_screw_error and normalize_to_left."""
     pt0 = pt0.reshape([1, 3])
     pt1 = pt1.reshape([1, 3])
-    v3 = v3.reshape([1, 3])
+    v3 = np.array(v3, dtype=float).reshape([1, 3])  # copy - never mutate the shared default in place
 
     v2 = pt1 - pt0
     v2 /= np.sqrt(np.sum(v2 ** 2))
@@ -118,7 +117,7 @@ def measure_screw_error(screw, ped_y, use_anatomic_axis=False):
         # Entry Error
         entry_y = e_y  # AP offset is simply y coordinate
         # trigonometric ratio of points coplanar with entry
-        r = (t_y / (t_y + e_y))
+        r = (t_y / (t_y - e_y))
         entry_x = t_x + r * (e_x - t_x)
         entry_z = t_z + r * (e_z - t_z)
 
@@ -139,7 +138,7 @@ def measure_screw_error(screw, ped_y, use_anatomic_axis=False):
 
     else:
         entry_x, entry_y, entry_z = detected_pts[0] - planned_pts[0]
-        tip_x, tip_y, tip_z = detected_pts[1] - detected_pts[1]
+        tip_x, tip_y, tip_z = detected_pts[1] - planned_pts[1]
         t = ped_y / l_y
         ped_x = t * tip_x + (1-t) * entry_x
         ped_z = t * tip_z + (1-t) * entry_z
@@ -265,7 +264,7 @@ def distance_to_pedicle(bone_v: np.ndarray, bone_f: np.ndarray,
     canal_mesh = trimesh.Trimesh(canal_v, canal_f)
     breach = shaft_mesh.intersection(canal_mesh, check_volume=False)
     if isinstance(breach, trimesh.Scene):
-        breach = breach.dump(concatenate=True)
+        breach = breach.to_geometry()
     breach_v, breach_f = breach.vertices, breach.faces
 
     dist = 0

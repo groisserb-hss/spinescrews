@@ -9,16 +9,19 @@ description = "Pipeline for assessing pedicle screw placement accuracy in CT sca
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
+# Upper bounds cap known-breaking next-majors (dipy 2.0 restructures the align
+# API; trimesh 5 removes Scene.dump; numpy/pandas/scipy/skimage drop deprecated
+# symbols). libigl is pinned exactly — 2.6.x silently breaks the igl API and has
+# no Windows wheel (see dicom_tools/tests/test_libigl_api.py).
 dependencies = [
-    "numpy", "scipy", "pandas",
-    "scikit-learn", "scikit-image",
-    "nibabel", "dipy",
-    "libigl==2.5.1", "trimesh", "plyfile", "manifold3d",
-    "shapely", "rtree",
-    "matplotlib",
+    "numpy<3", "scipy<2", "pandas<3",
+    "scikit-learn<2", "scikit-image<0.26",
+    "nibabel<6", "dipy<2",
+    "libigl==2.5.1", "trimesh<5", "plyfile", "manifold3d",
+    "shapely<3", "rtree",
+    "matplotlib<4",
     "joblib", "pyyaml", "python-igraph",
     "bg3dtools[mesh,viz,graph]",
-    "PyMaxflow",
 ]
 
 [project.optional-dependencies]

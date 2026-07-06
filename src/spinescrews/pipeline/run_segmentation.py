@@ -9,7 +9,6 @@ Usage:
     python -m spinescrews.pipeline.run_segmentation --backend totalseg --input preop.nii.gz --output_dir specimen_01/
 """
 
-import sys
 import os
 from os.path import join, expanduser, isdir, isfile, basename, dirname, abspath
 import glob

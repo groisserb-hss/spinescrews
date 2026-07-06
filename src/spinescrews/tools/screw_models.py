@@ -17,7 +17,7 @@ import yaml
 
 from bg3dtools.pointclouds.fitting import align_axes, project_to_line, project_to_plane
 from bg3dtools.transforms_unified import (
-    transform_points_forward, make_aff,
+    transform_points_forward,
     spherical_to_cartesian, cartesian_to_spherical,
 )
 from bg3dtools.mesh.generate import build_cylinder_capped, generate_icosahedron
@@ -103,7 +103,7 @@ def parse_preop_plan(csv_file: str) -> tuple[list[str], list[Screw]]:
     # override head sizes from plan if columns present
     if 'head_rad' in plan.columns and 'head_len' in plan.columns:
         for screw, l, r in zip(screws, plan['head_len'][sort_order], plan['head_rad'][sort_order]):
-            if screw.head_len > 0:
+            if getattr(screw, 'head_len', 0) > 0:
                 screw.head_len = float(l)
                 screw.head_rad = float(r)
 

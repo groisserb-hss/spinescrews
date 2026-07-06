@@ -25,7 +25,7 @@ from joblib import Parallel, delayed, effective_n_jobs
 from spinescrews.tools import possible_levels
 from spinescrews.tools.paths import timed
 from spinescrews.tools.screw_models import Screw
-from spinescrews.tools.nifti_utils import HU_CLIP, compute_metal_threshold, resample_to_pitch
+from spinescrews.tools.nifti_utils import compute_metal_threshold, resample_to_pitch
 from spinescrews.tools.articulated_models.base_unified import Articulated
 from bg3dtools.transforms_unified import make_aff, transform_points_forward, extract_params, transform_points_inverse, rel_params_to_aff, aff_to_rel_params
 from bg3dtools.pointclouds.registration import pc_icp

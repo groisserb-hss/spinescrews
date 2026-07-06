@@ -1,7 +1,6 @@
 """Correspondence match figure: 2x2 label + gradient transfer visualization."""
 
 import os
-import sys
 import logging
 import numpy as np
 import matplotlib

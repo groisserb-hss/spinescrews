@@ -1,8 +1,7 @@
-from os.path import join
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
-from bg3dtools.mesh.generate import build_cylinder_capped, pointcloud_to_splatted_mesh
+from bg3dtools.mesh.generate import pointcloud_to_splatted_mesh
 import igl
 
 

@@ -20,9 +20,23 @@ src/spinescrews/tools/totalseg_segmentor/config.json
 
 # build artifacts
 *.egg-info/
+build/
+dist/
+
+# test / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# virtual environments
+.venv/
+venv/
+env/
 
 # IDE and OS artifacts
 .idea/
+.vscode/
 .DS_Store
 
 # per-machine Claude Code settings

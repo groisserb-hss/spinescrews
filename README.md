@@ -49,11 +49,11 @@ extras **before** installing spinescrews:
 
 ```bash
 git clone https://github.com/groisserb-hss/bg3dtools.git ../bg3dtools
-git -C ../bg3dtools checkout spinescrews-1.0.0   # bg3dtools revision spinescrews 1.0.0 is pinned to (commit 50118a8)
+git -C ../bg3dtools checkout spinescrews-1.0.1   # bg3dtools revision spinescrews 1.0.1 is pinned to (commit 756df4c)
 pip install -e "../bg3dtools[mesh,viz,graph]"
 ```
 
-`-e` is an "editable" install. spinescrews 1.0.0 was frozen against bg3dtools tag `spinescrews-1.0.0` (commit `50118a8`),
+`-e` is an "editable" install. spinescrews 1.0.1 was frozen against bg3dtools tag `spinescrews-1.0.1` (commit `756df4c`),
 and the `checkout` above pins that revision for a reproducible build. To track a newer bg3dtools
 instead, `git pull` inside `../bg3dtools/` and the editable install picks it up in place.
 
@@ -394,10 +394,12 @@ python -m spinescrews.figures.visualize_breach /path/to/specimen_XX --level T11 
 
 ## Citation
 
-If you use spinescrews in your research, please cite the archived release. Citation metadata
-(authors, title, version) lives in [`CITATION.cff`](CITATION.cff), from which GitHub renders a
-**"Cite this repository"** button. Once the Zenodo archive is published, cite the version DOI it
-mints — a `doi:` field will be added to `CITATION.cff` at that point.
+[![DOI](https://zenodo.org/badge/1245781609.svg)](https://doi.org/10.5281/zenodo.21268294)
+
+If you use spinescrews in your research, please cite it. Citation metadata is maintained in
+[`CITATION.cff`](CITATION.cff), from which GitHub renders a **"Cite this repository"** button.
+The badge above is the **concept DOI** (it always resolves to the latest release); to cite a
+specific version, use that version's DOI from its Zenodo record.
 
 ## License
 

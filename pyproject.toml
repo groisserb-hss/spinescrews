@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spinescrews"
-version = "1.0.0"
+version = "1.0.1"
 description = "Pipeline for assessing pedicle screw placement accuracy in CT scans"
 readme = "README.md"
 requires-python = ">=3.10"

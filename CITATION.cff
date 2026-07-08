@@ -10,50 +10,13 @@ type: software
 authors:
   - family-names: Groisser
     given-names: "Benjamin N."
-  - family-names: Thakur
-    given-names: Ankush
-  - family-names: Hillstrom
-    given-names: "Howard J."
-  - family-names: Lu
-    given-names: Sarah
-  - family-names: Adhiyaman
-    given-names: Akshitha
-  - family-names: Tracey
-    given-names: "Olivia C."
-  - family-names: Nian
-    given-names: "Patrick P."
-  - family-names: Zucker
-    given-names: Colson
-  - family-names: Wisch
-    given-names: "Jenna L."
-  - family-names: Kaidi
-    given-names: Austin
-  - family-names: Kazarian
-    given-names: "Gregory S."
-  - family-names: Cunningham
-    given-names: Matthew
-  - family-names: Hresko
-    given-names: "M. Timothy"
-  - family-names: Haddas
-    given-names: Ram
-  - family-names: Blanco
-    given-names: John
-  - family-names: Mintz
-    given-names: "Doug N."
-  - family-names: Breighner
-    given-names: "Ryan E."
-  - family-names: Heyer
-    given-names: "Jessica H."
-  - family-names: Widmann
-    given-names: "Roger F."
-version: 1.0.0
-date-released: "2026-07-07"
+version: 1.0.1
+date-released: "2026-07-08"
 license: PolyForm-Noncommercial-1.0.0
 repository-code: "https://github.com/groisserb-hss/spinescrews"
 url: "https://github.com/groisserb-hss/spinescrews"
-# After the Zenodo release mints a DOI for v1.0.0, add it here (and cite it from the README):
-# doi: 10.5281/zenodo.XXXXXXX
+doi: 10.5281/zenodo.21268294
 # identifiers:
 #   - type: doi
-#     value: 10.5281/zenodo.XXXXXXX
+#     value: 10.5281/zenodo.21268295
 #     description: "Archived v1.0.0 snapshot"

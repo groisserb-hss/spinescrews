@@ -49,11 +49,11 @@ extras **before** installing spinescrews:
 
 ```bash
 git clone https://github.com/groisserb-hss/bg3dtools.git ../bg3dtools
-git -C ../bg3dtools checkout 6eb9d40   # revision that spinescrews 1.0.0 is pinned to
+git -C ../bg3dtools checkout spinescrews-1.0.0   # bg3dtools revision spinescrews 1.0.0 is pinned to (commit 50118a8)
 pip install -e "../bg3dtools[mesh,viz,graph]"
 ```
 
-`-e` is an "editable" install. spinescrews 1.0.0 was frozen against bg3dtools commit `6eb9d40`,
+`-e` is an "editable" install. spinescrews 1.0.0 was frozen against bg3dtools tag `spinescrews-1.0.0` (commit `50118a8`),
 and the `checkout` above pins that revision for a reproducible build. To track a newer bg3dtools
 instead, `git pull` inside `../bg3dtools/` and the editable install picks it up in place.
 

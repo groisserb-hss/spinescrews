@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=77"]  # >=77 for PEP 639 SPDX license metadata
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "spinescrews"
-version = "0.1.0"
+version = "1.0.0"
 description = "Pipeline for assessing pedicle screw placement accuracy in CT scans"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
 # Upper bounds cap known-breaking next-majors (dipy 2.0 restructures the align
 # API; trimesh 5 removes Scene.dump; numpy/pandas/scipy/skimage drop deprecated
 # symbols). libigl is pinned exactly — 2.6.x silently breaks the igl API and has

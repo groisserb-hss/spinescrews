@@ -49,11 +49,13 @@ extras **before** installing spinescrews:
 
 ```bash
 git clone https://github.com/groisserb-hss/bg3dtools.git ../bg3dtools
+git -C ../bg3dtools checkout 6eb9d40   # revision that spinescrews 1.0.0 is pinned to
 pip install -e "../bg3dtools[mesh,viz,graph]"
 ```
 
-`-e` is an "editable" install, so a later `git pull` inside `../bg3dtools/` updates the package
-in place.
+`-e` is an "editable" install. spinescrews 1.0.0 was frozen against bg3dtools commit `6eb9d40`,
+and the `checkout` above pins that revision for a reproducible build. To track a newer bg3dtools
+instead, `git pull` inside `../bg3dtools/` and the editable install picks it up in place.
 
 ### 5. Install spinescrews
 
@@ -179,6 +181,12 @@ specimen bundled in [`sample/`](sample/):
 | `sample/preop.nii.gz` | pre-operative CT volume |
 | `sample/postop.nii.gz` | post-operative CT volume (screws implanted) |
 | `sample/preop_plan.csv` | 30 planned polyaxial screws (T2-L4, bilateral), in the Hybrid Screw Planner export format |
+
+> **Sample data provenance.** The `sample/` CT volumes come from a de-identified **cadaveric** spine
+> specimen obtained through the [Anatomy Gifts Registry](https://www.anatomygifts.org/), a nonprofit
+> whole-body donation program operating under informed-donor consent for medical research and
+> education. No living-subject or patient data is included in this repository; NIfTI conversion
+> strips DICOM patient metadata.
 
 Because the converted volumes and the plan are already provided, you can skip
 [Step 0](#step-0-dicom-preparation) (DICOM-to-NIfTI) and [screw planning](#screw-planning-3d-slicer),
@@ -383,6 +391,13 @@ python -m spinescrews.figures.CT_visualization /path/to/specimen_XX
 # Breach visualization for a specific screw
 python -m spinescrews.figures.visualize_breach /path/to/specimen_XX --level T11 --side L
 ```
+
+## Citation
+
+If you use spinescrews in your research, please cite the archived release. Citation metadata
+(authors, title, version) lives in [`CITATION.cff`](CITATION.cff), from which GitHub renders a
+**"Cite this repository"** button. Once the Zenodo archive is published, cite the version DOI it
+mints — a `doi:` field will be added to `CITATION.cff` at that point.
 
 ## License
 

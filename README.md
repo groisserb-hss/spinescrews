@@ -191,7 +191,7 @@ from the repo root, with `screws310` active:
 # Step 1 — segment the vertebrae in the pre-op CT
 spinescrews-segment --input sample/preop.nii.gz --output_dir sample
 
-# Steps 2-6 — pre-op alignment, then post-op registration + screw detection
+# Steps 02-06 — pre-op alignment, then post-op registration + screw detection
 spinescrews-align sample
 
 # Step 7 — planned-vs-detected accuracy
@@ -217,7 +217,7 @@ Same three pipeline commands as the sample, but you supply the inputs first:
 
    ```bash
    spinescrews-segment --input /path/to/specimen_XX/preop.nii.gz --output_dir /path/to/specimen_XX
-   spinescrews-align    /path/to/specimen_XX     # steps 2-6
+   spinescrews-align    /path/to/specimen_XX     # steps 02-06
    spinescrews-accuracy /path/to/specimen_XX     # step 7
    ```
 
@@ -316,7 +316,7 @@ spinescrews-segment --input /path/to/specimen_XX/preop.nii.gz \
                      --backend inria
 ```
 
-### Steps 2-6: Alignment and registration
+### Steps 02-06: Alignment and registration
 
 Run the full pipeline (pre-operative normalization, template correspondence,
 orientation refinement, screw detection, articulated registration):
@@ -328,7 +328,7 @@ spinescrews-align /path/to/specimen_XX
 Or run pre-op and post-op stages separately:
 
 ```bash
-spinescrews-preop /path/to/specimen_XX    # steps 01-04
+spinescrews-preop /path/to/specimen_XX    # steps 02-04
 spinescrews-postop /path/to/specimen_XX   # steps 05-06
 ```
 

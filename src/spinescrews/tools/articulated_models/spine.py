@@ -100,17 +100,6 @@ class Spine(Articulated):
         return cls(verts, labels=labels, default_aff=default_aff, faces=faces,
                    trunk=trunk, landmarks=landmarks, backend=backend)
 
-    @staticmethod
-    def load_spine(filename):
-        """Load a Spine model from a MATLAB .mat file (verts, mean affines, faces, landmarks)."""
-        from hdf5storage import loadmat
-        data = loadmat(filename, squeeze_me=True, struct_as_record=False)
-        verts = [v for v in data['verts']]
-        mean_aff = transforms.make_aff(data['mean_twist'], data['mean_trans'])
-        faces = [f for f in data['faces']]
-        landmarks = [l for l in data['landmarks']]
-        return Spine(verts, default_aff=mean_aff, faces=faces, landmarks=landmarks)
-
     @property
     def nV(self):
         """Total number of vertices across all bone segments."""

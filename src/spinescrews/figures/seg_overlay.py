@@ -8,7 +8,6 @@ import matplotlib
 if not matplotlib.is_interactive():
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 
 from spinescrews.tools import val_seg
 from spinescrews.tools.paths import segmentation_dir, segmentation_file
@@ -57,9 +56,11 @@ def generate_seg_overlay(analysis_dir, specimen_dir):
     labels = sorted(set(np.unique(seg_data)) - {0})
     n_labels = len(labels)
     label_to_color = {}
-    for i, lab in enumerate(labels):
-        rgba = _LABEL_CMAP(i / max(1, n_labels - 1))
-        label_to_color[lab] = rgba
+    for lab in labels:
+        # key the color to the label integer (not its rank among present labels)
+        # so a given vertebra keeps the same color across specimens regardless of
+        # which levels happen to be segmented
+        label_to_color[lab] = _LABEL_CMAP(int(lab) % _LABEL_CMAP.N)
 
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 

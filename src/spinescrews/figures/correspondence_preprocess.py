@@ -3,7 +3,6 @@
 import os
 import sys
 import logging
-import numpy as np
 import matplotlib
 if not matplotlib.is_interactive():
     matplotlib.use('Agg')

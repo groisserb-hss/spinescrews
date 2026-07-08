@@ -70,7 +70,7 @@ def compute_metal_threshold(data: np.ndarray, floor: int = 500) -> int:
     At coarse resolution (4mm) this drops to ~1000-1100 HU,
     capturing partial-volume metal voxels.
     """
-    data.clip(-1024, HU_CLIP)
+    data = data.clip(-1024, HU_CLIP)
 
     upper = data[data > floor].ravel()
     if len(upper) < 100:

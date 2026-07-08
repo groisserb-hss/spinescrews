@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.optimize import minimize
 
-from .graph import FactorGraph
 from .particles import ParticleSet
 from .proposals import RandomWalkProposal, NeighborProposal
 

@@ -53,30 +53,6 @@ class FactorGraph:
         """Return list of neighbor node IDs."""
         return self._adj[node_id]
 
-    @property
-    def is_chain(self):
-        """True if the graph is a simple chain (path graph)."""
-        if len(self.edges) != self.n_nodes - 1:
-            return False
-        return all(len(nb) <= 2 for nb in self._adj)
-
-    @property
-    def is_tree(self):
-        """True if the graph is a tree (connected, no cycles)."""
-        if len(self.edges) != self.n_nodes - 1:
-            return False
-        # BFS connectivity check
-        visited = set()
-        q = deque([0])
-        visited.add(0)
-        while q:
-            u = q.popleft()
-            for v in self._adj[u]:
-                if v not in visited:
-                    visited.add(v)
-                    q.append(v)
-        return len(visited) == self.n_nodes
-
     def message_schedule(self):
         """Compute forward (leaf→root) and backward (root→leaf) edge lists.
 

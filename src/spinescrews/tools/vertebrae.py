@@ -7,7 +7,6 @@ frames, and volume cropping used throughout alignment and accuracy measurement.
 
 from os.path import join
 import logging
-import warnings
 
 log = logging.getLogger(__name__)
 from collections import namedtuple
@@ -15,23 +14,22 @@ from collections import namedtuple
 import igl
 import numpy as np
 import nibabel as nib
-from dipy.align._public import AffineMap
+from dipy.align.imaffine import AffineMap
 from skimage.measure import marching_cubes
 import skimage.morphology as image_morph
 from scipy import ndimage
 import scipy.spatial as spatial
-import igraph as ig
 from scipy.stats import mode
 from scipy import sparse
 
 
-from bg3dtools.mesh.utils import per_vertex_smoothing, per_vertex_normals, get_genus, surface_sample, submesh, mesh_volume
+from bg3dtools.mesh.utils import per_vertex_smoothing, per_vertex_normals, get_genus, surface_sample, submesh, mesh_volume, as_igl_faces
 from bg3dtools.mesh.barycentric import bc2sparse
-from bg3dtools.mesh.mesh_io import read_triangle_mesh, read_colored_plyfile
+from bg3dtools.mesh.mesh_io import read_triangle_mesh
 from bg3dtools.mesh.registration import nonrigid_ICP, surface_match
 from bg3dtools.pointclouds.fitting import project_to_plane, fit_plane_to_points
 from bg3dtools.utils import ConvergenceScheduler
-from bg3dtools.transforms_unified import transform_points_forward, transform_points_inverse
+from bg3dtools.transforms_unified import transform_points_inverse
 from bg3dtools.pointclouds.quantize import convert_to_points, voxelize
 from bg3dtools.graphs import skeleton_to_graph, redistribute_evenly, smooth_loop, get_longest_path_fast
 from spinescrews.tools.nifti_utils import nonzero_box
@@ -207,6 +205,7 @@ def _build_anatomical_frame(plane, midpoint, body_pts, z_up):
 def _extract_surface(seg_mask, pitch, trans):
     """Marching cubes -> largest manifold patch -> winding fix -> smooth -> genus."""
     verts, faces, _, _ = marching_cubes(seg_mask, spacing=pitch)
+    faces = as_igl_faces(faces)  # marching_cubes gives int32 faces on Windows; keep igl calls int64
     p = igl.extract_manifold_patches(faces)
     verts, faces, f_idx, v_idx = submesh(verts, faces, p[1] == mode(p[1])[0])
     verts += trans
@@ -275,7 +274,9 @@ class Vertebra:
     def get_mesh_genus1(seg_vol: nib.Nifti1Image, support_pts, smoothness=1.0, offset=0.0):
         """Iterative erosion targeting genus=1 with skeleton support field.
 
-        Returns (verts, faces, inflated_v, f_inflated).
+        Returns (v_small, f_small, inflated_v, inflated_f, small2med, med2small):
+        the decimated genus-1 mesh, its erosion-unwound inflated counterpart, and
+        the sparse small<->intermediate correspondence matrices.
         """
         import time as _time
         _t0 = _time.perf_counter()
@@ -460,9 +461,9 @@ class Vertebra:
     @staticmethod
     def rotate_and_crop(image, affine, dimensions=(200, 200, 200), output_aff=None, sampling='linear'):
         """
-        Wrapper for AffineMap (from dipy.align._public).
+        Wrapper for AffineMap (from dipy.align.imaffine).
         :param image: input image object with 3D data and affine transform to world coordinates
-        :param tform: mapping from input to output location (in world coordinates)
+        :param affine: mapping from input to output location (in world coordinates)
         :param dimensions: (200, 200, 200) output dimensions
         :param output_aff: (optional) transform from output image to world coordinates
         :param sampling: 'nearest' or 'linear' (default linear)
@@ -481,7 +482,9 @@ class Vertebra:
         """
         :param label: binary mask of a single vertebra
         :param z_up: True if z-axis points cranially, False if z-axis points caudally
-        :return: affine transformation to being vertebra into normalized coordinate system
+        :return: (tform, verts, faces, inflated_v, inflated_f, small2med, med2small) --
+            the world->normalized affine plus the normalized genus-1 mesh, its inflated
+            counterpart, and the small<->intermediate correspondence maps
         """
         subvol = nonzero_box(label)
 

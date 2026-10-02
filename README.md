@@ -73,7 +73,7 @@ the console scripts
 (`spinescrews-segment`, `spinescrews-preop`, `spinescrews-postop`, `spinescrews-align`,
 `spinescrews-accuracy`). Every command supports `--help`.
 
-### 6. External command-line tool
+### 6. External tool and system libraries
 
 The Step 0 survey/conversion scripts are pure Python (they use `pydicom`, already installed), so
 the only external tool needed is **dcm2niix**, for the actual DICOM-to-NIfTI conversion:
@@ -83,6 +83,18 @@ the only external tool needed is **dcm2niix**, for the actual DICOM-to-NIfTI con
 | `dcm2niix` | DICOM-to-NIfTI conversion | `conda install -c conda-forge dcm2niix` (any OS) — or `brew install dcm2niix` / `apt install dcm2niix` |
 
 (`dcmdump` and `jq` are no longer required: the survey step reads DICOM headers directly.)
+
+**Linux only — graphics libraries for the QC figures.** Open3D (used to render the 3D figures)
+needs the system EGL/OpenGL libraries. Desktop Linux installs have them; minimal server and
+container images (Docker, RunPod, many cloud VMs) often don't, and the pipeline then fails with
+`ImportError: libEGL.so.1: cannot open shared object file`. On Debian/Ubuntu, install them with:
+
+```bash
+sudo apt-get install -y libegl1 libgl1 libgomp1   # drop `sudo` if you are already root (e.g. in a container)
+```
+
+No GPU or display is needed: on a headless machine the figures fall back to a simpler software
+renderer automatically.
 
 ### 7. Segmentation backend
 
@@ -151,7 +163,7 @@ Before your first run, make sure you have:
 - [ ] the `screws310` environment created and activated (step 3)
 - [ ] bg3dtools installed (step 4)
 - [ ] spinescrews installed, so the `spinescrews-*` commands work (step 5)
-- [ ] `dcm2niix` installed (step 6)
+- [ ] `dcm2niix` installed, plus the graphics libraries on minimal Linux images (step 6)
 - [ ] one segmentation backend set up (step 7)
 - [ ] CT scans converted to `preop.nii.gz` / `postop.nii.gz` ([Step 0](#step-0-dicom-preparation))
 - [ ] a screw plan exported to `preop_plan.csv` ([Screw planning](#screw-planning-3d-slicer))

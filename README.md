@@ -357,6 +357,12 @@ spinescrews-postop /path/to/specimen_XX   # steps 05-06
 Each step writes a `summary.json` gate file when it finishes. On re-run, completed
 steps are skipped automatically.
 
+Step 02 writes two meshes per vertebra: `preop_gen1.ply`, the genus-1 mesh that erosion
+produced (what the template correspondence and orientation refinement use), and
+`preop_gen1-inflated.ply`, the same mesh after the erosion is unwound so that its wall is
+the segmented cortex again (`inflated2med.npz` maps its refined vertices back). The second
+is the surface that step 7 measures breach against.
+
 ### Step 7: Accuracy measurement
 
 Requires the screw plan `specimen_XX/preop_plan.csv` exported by the
@@ -366,9 +372,11 @@ Requires the screw plan `specimen_XX/preop_plan.csv` exported by the
 spinescrews-accuracy /path/to/specimen_XX
 ```
 
-Results are written to `analysis/07_accuracy/results.csv`. Breach figures and
-mesh exports (PLY files for review in MeshLab or Blender) are generated
-automatically.
+Results are written to `analysis/07_accuracy/results.csv`. Breach distance is the
+signed distance from the screw surface to the medial pedicle wall of the
+erosion-unwound preoperative mesh (`02_preop/<LEVEL>/preop_gen1-inflated.ply`, in the
+refined frame of step 04); negative values are clearance. Breach figures and mesh
+exports (PLY files for review in MeshLab or Blender) are generated automatically.
 
 ## Re-generating figures
 

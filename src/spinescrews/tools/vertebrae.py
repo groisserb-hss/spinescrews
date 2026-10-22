@@ -5,7 +5,7 @@ canal-loop detection, orientation normalization, affine transforms between CT an
 frames, and volume cropping used throughout alignment and accuracy measurement.
 """
 
-from os.path import join
+from os.path import join, isfile
 import logging
 
 log = logging.getLogger(__name__)
@@ -404,6 +404,57 @@ class Vertebra:
                  _time.perf_counter() - _t0, best_genus or get_genus(verts, faces),
                  final_iter, len(v_small), len(f_small))
         return v_small, f_small, v_inflated, f_inflated, small2med, med2small, inflated2med
+
+    @staticmethod
+    def load_unwound(level_dir):
+        """Load step 02's erosion-unwound mesh and the maps that tie it to preop_gen1.ply.
+
+        preop_gen1.ply is the eroded genus-1 mesh after the final decimation: the mesh step 03 matches to the
+        template and step 04 orients. preop_gen1-inflated.ply is the intermediate-decimation mesh after the
+        erosion unwind, so its wall is the segmented cortex wherever genus-1 enforcement had eroded it; breach is
+        measured against it. small2med / med2small are the small <-> intermediate correspondences and inflated2med
+        is the unwind's rest map (n_inflated x n_med; identity rows for the intermediate mesh's own vertices).
+        Step-02 outputs written before the unwind refined the mesh have no inflated2med.npz: their mesh is
+        unrefined and the map is the identity.
+
+        :param level_dir: 02_preop/{LEVEL}/
+        :return: (inflated_v, inflated_f, small2med, med2small, inflated2med) in step 02's normalized frame
+        """
+        inflated_file = join(level_dir, 'preop_gen1-inflated.ply')
+        small2med_file = join(level_dir, 'small2med.npz')
+        med2small_file = join(level_dir, 'med2small.npz')
+        for f in (inflated_file, small2med_file, med2small_file):
+            if not isfile(f):
+                raise FileNotFoundError('missing %s — re-run step 02' % f)
+        inflated_v, inflated_f = igl.read_triangle_mesh(inflated_file)
+        small2med = sparse.load_npz(small2med_file).tocsr()
+        med2small = sparse.load_npz(med2small_file).tocsr()
+        n_med = small2med.shape[0]
+
+        inflated2med_file = join(level_dir, 'inflated2med.npz')
+        if isfile(inflated2med_file):
+            inflated2med = sparse.load_npz(inflated2med_file).tocsr()
+        elif len(inflated_v) == n_med:
+            inflated2med = sparse.identity(n_med, format='csr')
+        else:
+            raise FileNotFoundError('missing %s for a refined mesh — re-run step 02' % inflated2med_file)
+        if inflated2med.shape != (len(inflated_v), n_med):
+            raise ValueError('%s: inflated2med is %s, expected (%d, %d) — re-run step 02'
+                             % (level_dir, inflated2med.shape, len(inflated_v), n_med))
+        return inflated_v, inflated_f, small2med, med2small, inflated2med
+
+    @staticmethod
+    def load_measurement_surface(level_dir, template2bone):
+        """The surface breach is measured against: step 02's erosion-unwound mesh with the template labels on it.
+
+        :param level_dir: 02_preop/{LEVEL}/
+        :param template2bone: (n_small, n_template) sparse correspondence from step 03, sized for preop_gen1.ply
+        :return: (verts, faces, template2surface); template2surface is (n_inflated, n_template) sparse, so
+            template2surface @ label gives per-vertex label weights on the surface
+        """
+        inflated_v, inflated_f, small2med, _, inflated2med = Vertebra.load_unwound(level_dir)
+        template2surface = (inflated2med @ small2med @ sparse.csr_matrix(template2bone)).tocsr()
+        return inflated_v, inflated_f, template2surface
 
     def set_mesh(self, v, f):
         """Directly assign mesh vertices and faces (e.g. after loading from disk)."""

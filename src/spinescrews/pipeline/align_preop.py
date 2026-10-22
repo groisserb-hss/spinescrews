@@ -1,5 +1,5 @@
 import os
-from os.path import join, basename, expanduser, isfile
+from os.path import join, expanduser, isfile
 import logging
 from time import time
 
@@ -31,6 +31,10 @@ import matplotlib
 matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
+
+# Everything step 02 writes per level (the SA level writes the affine only). A level is loaded from file only when
+# all of these exist, so a level whose meshes were removed to be recomputed is not mistaken for a finished one.
+PREOP_LEVEL_FILES = ('preop_affine.npy', 'preop_gen1.ply', 'preop_gen1-inflated.ply', 'small2med.npz', 'med2small.npz')
 
 
 def _whittaker_smooth(data, w, lam, d=2):
@@ -144,7 +148,7 @@ class Aligner:
 
             os.makedirs(level_dir, exist_ok=True)
 
-            if isfile(affine_file) and isfile(gen1_file):
+            if all(isfile(join(level_dir, f)) for f in PREOP_LEVEL_FILES):
                 # use pre-computed transformation matrix and mesh; re-crop volumes
                 vert = Vertebra(level_name)
                 vert.affine = np.load(affine_file)
@@ -326,30 +330,9 @@ class Aligner:
             raw_v, raw_f = Vertebra.get_mesh(vert.seg_normalized)
 
             # Always use 3-step chain: template → small → inflated → raw
-            level_dir = preop_level_dir(self.analysis_dir, level_name)
-            inflated_file = join(level_dir, 'preop_gen1-inflated.ply')
-            small2med_file = join(level_dir, 'small2med.npz')
-            med2small_file = join(level_dir, 'med2small.npz')
-            for f in (inflated_file, small2med_file, med2small_file):
-                if not isfile(f):
-                    raise FileNotFoundError(f'missing {basename(f)} for {level_name} — re-run step 02')
-
-            inflated_v, inflated_f = igl.read_triangle_mesh(inflated_file)
-            small2med = sparse.load_npz(small2med_file)
-            med2small = sparse.load_npz(med2small_file)
+            inflated_v, inflated_f, small2med, med2small, inflated2med = \
+                Vertebra.load_unwound(preop_level_dir(self.analysis_dir, level_name))
             n_med = small2med.shape[0]
-            # the unwind refines the inflated mesh (appending vertices); inflated2med maps it back to the
-            # intermediate mesh. Step-02 outputs from before refinement have no such file and an unrefined mesh.
-            inflated2med_file = join(level_dir, 'inflated2med.npz')
-            if isfile(inflated2med_file):
-                inflated2med = sparse.load_npz(inflated2med_file)
-            elif len(inflated_v) == n_med:
-                inflated2med = sparse.identity(n_med, format='csr')
-            else:
-                raise FileNotFoundError(f'missing inflated2med.npz for refined {level_name} mesh — re-run step 02')
-            if inflated2med.shape != (len(inflated_v), n_med):
-                raise ValueError(f'{level_name}: inflated2med is {inflated2med.shape}, expected '
-                                 f'({len(inflated_v)}, {n_med}) — re-run step 02')
 
             # inflated↔raw correspondence
             _, fidx, bc = surface_match(raw_v, inflated_v, inflated_f)

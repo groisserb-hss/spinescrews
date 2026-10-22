@@ -49,13 +49,15 @@ extras **before** installing spinescrews:
 
 ```bash
 git clone https://github.com/groisserb-hss/bg3dtools.git ../bg3dtools
-git -C ../bg3dtools checkout spinescrews-1.0.1   # bg3dtools revision spinescrews 1.0.1 is pinned to (commit 756df4c)
+git -C ../bg3dtools checkout 0e6ff9d   # bg3dtools revision this spinescrews is pinned to
 pip install -e "../bg3dtools[mesh,viz,graph]"
 ```
 
-`-e` is an "editable" install. spinescrews 1.0.1 was frozen against bg3dtools tag `spinescrews-1.0.1` (commit `756df4c`),
-and the `checkout` above pins that revision for a reproducible build. To track a newer bg3dtools
-instead, `git pull` inside `../bg3dtools/` and the editable install picks it up in place.
+`-e` is an "editable" install. The `checkout` above pins bg3dtools commit `0e6ff9d` for a reproducible build:
+the erosion unwind (step 02) needs its `nonrigid_ICP` with the membrane regulariser in the solve. The spinescrews
+1.0.1 release was frozen against the older bg3dtools tag `spinescrews-1.0.1` (commit `756df4c`); check that out
+instead when building 1.0.1. To track a newer bg3dtools, `git pull` inside `../bg3dtools/` and the editable install
+picks it up in place.
 
 ### 5. Install spinescrews
 
@@ -355,6 +357,12 @@ spinescrews-postop /path/to/specimen_XX   # steps 05-06
 Each step writes a `summary.json` gate file when it finishes. On re-run, completed
 steps are skipped automatically.
 
+Step 02 writes two meshes per vertebra: `preop_gen1.ply`, the genus-1 mesh that erosion
+produced (what the template correspondence and orientation refinement use), and
+`preop_gen1-inflated.ply`, the same mesh after the erosion is unwound so that its wall is
+the segmented cortex again (`inflated2med.npz` maps its refined vertices back). The second
+is the surface that step 7 measures breach against.
+
 ### Step 7: Accuracy measurement
 
 Requires the screw plan `specimen_XX/preop_plan.csv` exported by the
@@ -364,9 +372,11 @@ Requires the screw plan `specimen_XX/preop_plan.csv` exported by the
 spinescrews-accuracy /path/to/specimen_XX
 ```
 
-Results are written to `analysis/07_accuracy/results.csv`. Breach figures and
-mesh exports (PLY files for review in MeshLab or Blender) are generated
-automatically.
+Results are written to `analysis/07_accuracy/results.csv`. Breach distance is the
+signed distance from the screw surface to the medial pedicle wall of the
+erosion-unwound preoperative mesh (`02_preop/<LEVEL>/preop_gen1-inflated.ply`, in the
+refined frame of step 04); negative values are clearance. Breach figures and mesh
+exports (PLY files for review in MeshLab or Blender) are generated automatically.
 
 ## Re-generating figures
 

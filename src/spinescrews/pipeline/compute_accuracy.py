@@ -45,8 +45,8 @@ class ErrorComputer:
         self.anatomic_axis = config.anatomic_axis
 
         # screw-level parameters
-        self.preop_verts = {}  # to hold preop affine transforms and raw meshes
-        self.preop_gen1 = {}
+        self.preop_verts = {}  # refined affine, volumes, measurement surface (erosion-unwound mesh) + labels
+        self.preop_gen1 = {}  # eroded genus-1 mesh (preop_gen1.ply) for the canal visibility test
         self.postop_verts = {}  # to hold postop affine transforms and aligned template meshes
         self.screws = []  # to be loaded in normalized coordinates
 
@@ -126,20 +126,23 @@ class ErrorComputer:
             vert.img_normalized = nibabel.load(join(o_dir, 'preop.nii.gz'))
             vert.seg_normalized = nibabel.load(join(o_dir, 'preop_seg.nii.gz'))
 
-            # Load gen1 from step 02, transform to refined frame
+            # Two step-02 meshes, both moved from step 02's frame to the refined one. The eroded genus-1 mesh
+            # (preop_gen1.ply, what step 03 matched to the template) keeps the canal visibility test clean; the
+            # erosion-unwound mesh is the measurement surface, whose wall is the segmented cortex, and it carries
+            # the template labels through template2bone -> small2med -> inflated2med.
+            corr_dir = correspondence_level_dir(self.analysis_dir, level)
+            template2bone = sparse.load_npz(join(corr_dir, 'template2bone.npz'))
             v_gen1, f_gen1 = igl.read_triangle_mesh(join(preop_ldir, 'preop_gen1.ply'))
+            v_surf, f_surf, template2surface = Vertebra.load_measurement_surface(preop_ldir, template2bone)
             orig_aff = np.load(join(preop_ldir, 'preop_affine.npy'))
             delta = np.linalg.inv(vert.affine) @ orig_aff
-            v_gen1 = (delta[:3, :3] @ v_gen1.T).T + delta[:3, 3]
-            vert.set_mesh(v_gen1, f_gen1)
+            v_gen1 = transform_points_forward(delta, v_gen1)
+            v_surf = transform_points_forward(delta, v_surf)
+            vert.set_mesh(v_surf, f_surf)
+            vert.template2mesh = template2surface
 
             self.preop_verts[level] = vert
             self.preop_gen1[level] = Mesh(v_gen1, f_gen1)
-
-            # template correspondence from 03_correspondence/{LEVEL}/
-            corr_dir = correspondence_level_dir(self.analysis_dir, level)
-            vert.template2mesh = sparse.load_npz(join(corr_dir, 'template2bone.npz')).tocsr()
-            vert.mesh2template = sparse.load_npz(join(corr_dir, 'bone2template.npz')).tocsr()
 
             # postop registered data from 06_registration/{LEVEL}/
             reg_dir = registration_level_dir(self.analysis_dir, level)
@@ -304,7 +307,8 @@ class ErrorComputer:
         vertebra = self.preop_verts[level_name]
         verts, faces = vertebra.verts, vertebra.faces
 
-        # use gen1 mesh already transformed to refined frame
+        # The visibility test runs on the eroded genus-1 mesh (its canal is a clean, open cylinder); the boolean
+        # difference below then carves the canal with the measurement surface, so the canal wall is the cortex.
         gen1 = self.preop_gen1[level_name]
         v_gen1, f_gen1 = gen1.v.copy(), gen1.f.copy()
 

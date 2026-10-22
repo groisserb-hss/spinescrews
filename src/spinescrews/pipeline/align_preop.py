@@ -1,5 +1,5 @@
 import os
-from os.path import join, basename, expanduser, isfile
+from os.path import join, expanduser, isfile
 import logging
 from time import time
 
@@ -31,6 +31,10 @@ import matplotlib
 matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
+
+# Everything step 02 writes per level (the SA level writes the affine only). A level is loaded from file only when
+# all of these exist, so a level whose meshes were removed to be recomputed is not mistaken for a finished one.
+PREOP_LEVEL_FILES = ('preop_affine.npy', 'preop_gen1.ply', 'preop_gen1-inflated.ply', 'small2med.npz', 'med2small.npz')
 
 
 def _whittaker_smooth(data, w, lam, d=2):
@@ -144,7 +148,7 @@ class Aligner:
 
             os.makedirs(level_dir, exist_ok=True)
 
-            if isfile(affine_file) and isfile(gen1_file):
+            if all(isfile(join(level_dir, f)) for f in PREOP_LEVEL_FILES):
                 # use pre-computed transformation matrix and mesh; re-crop volumes
                 vert = Vertebra(level_name)
                 vert.affine = np.load(affine_file)
@@ -166,12 +170,13 @@ class Aligner:
                 affine = np.load(join(preop_level_dir(self.analysis_dir, neighb_above), 'preop_affine.npy'))
             else:
                 # orient to inferior end-plate of segmented vertebra (transform in real-world coordinates)
-                affine, verts_g1, faces_g1, inflated_v, inflated_f, small2med, med2small = \
+                affine, verts_g1, faces_g1, inflated_v, inflated_f, small2med, med2small, inflated2med = \
                     Vertebra.normalize_orientation(label_world)
                 igl.write_triangle_mesh(join(level_dir, 'preop_gen1.ply'), verts_g1, faces_g1)
                 igl.write_triangle_mesh(join(level_dir, 'preop_gen1-inflated.ply'), inflated_v, inflated_f)
                 sparse.save_npz(join(level_dir, 'small2med.npz'), small2med)
                 sparse.save_npz(join(level_dir, 'med2small.npz'), med2small)
+                sparse.save_npz(join(level_dir, 'inflated2med.npz'), inflated2med)
 
             # verify that detected vertebra is close to corresponding screw plan
             screws = [S for S in self.screws if S.level == level_name]
@@ -325,17 +330,9 @@ class Aligner:
             raw_v, raw_f = Vertebra.get_mesh(vert.seg_normalized)
 
             # Always use 3-step chain: template → small → inflated → raw
-            level_dir = preop_level_dir(self.analysis_dir, level_name)
-            inflated_file = join(level_dir, 'preop_gen1-inflated.ply')
-            small2med_file = join(level_dir, 'small2med.npz')
-            med2small_file = join(level_dir, 'med2small.npz')
-            for f in (inflated_file, small2med_file, med2small_file):
-                if not isfile(f):
-                    raise FileNotFoundError(f'missing {basename(f)} for {level_name} — re-run step 02')
-
-            inflated_v, inflated_f = igl.read_triangle_mesh(inflated_file)
-            small2med = sparse.load_npz(small2med_file)
-            med2small = sparse.load_npz(med2small_file)
+            inflated_v, inflated_f, small2med, med2small, inflated2med = \
+                Vertebra.load_unwound(preop_level_dir(self.analysis_dir, level_name))
+            n_med = small2med.shape[0]
 
             # inflated↔raw correspondence
             _, fidx, bc = surface_match(raw_v, inflated_v, inflated_f)
@@ -343,9 +340,9 @@ class Aligner:
             _, fidx, bc = surface_match(inflated_v, raw_v, raw_f)
             raw2inflated = bc2sparse(raw_f, fidx, bc, nV=len(raw_v))
 
-            # Compose full chain
-            template2seg = inflated2raw @ small2med @ template_2_gen1
-            seg2template = gen1_2_template @ med2small @ raw2inflated
+            # Compose full chain (the original intermediate vertices are the inflated mesh's first n_med)
+            template2seg = inflated2raw @ inflated2med @ small2med @ template_2_gen1
+            seg2template = gen1_2_template @ med2small @ raw2inflated.tocsr()[:n_med]   # bc2sparse gives COO
 
             nnz_per_row = template2seg.getnnz(axis=1)
             coverage = np.count_nonzero(nnz_per_row) / len(nnz_per_row)

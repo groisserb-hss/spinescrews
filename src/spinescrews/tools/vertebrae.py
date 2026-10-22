@@ -5,7 +5,7 @@ canal-loop detection, orientation normalization, affine transforms between CT an
 frames, and volume cropping used throughout alignment and accuracy measurement.
 """
 
-from os.path import join
+from os.path import join, isfile
 import logging
 
 log = logging.getLogger(__name__)
@@ -33,18 +33,40 @@ from bg3dtools.transforms_unified import transform_points_inverse
 from bg3dtools.pointclouds.quantize import convert_to_points, voxelize
 from bg3dtools.graphs import skeleton_to_graph, redistribute_evenly, smooth_loop, get_longest_path_fast
 from spinescrews.tools.nifti_utils import nonzero_box
+from spinescrews.tools.mesh_refine import split_long_edges
 
 
 Template = namedtuple('Template', ['raw', 'processed', 'labels'])
 VertebralLabels = namedtuple('VertebralLabels', ['canal', 'ped_right', 'ped_left'])
 
 
-def _unwind_erosion(current_v, faces, target_stack, model_weight=0.0002, n_samples=30000):
+# Erosion unwind (all lengths in mm). Each unwind step anneals the robust radius from coarse to fine so that target
+# points far from the mesh can pull it out (erosion can delete a structure outright, e.g. a transverse process cut off
+# with the bar around its foramen, or a spinous-process tip); every call is regularised by a membrane in the solve,
+# against its own starting mesh, and is followed by splitting the edges the growth stretched. Chosen on 14 unwinding
+# levels from a scan of all specimens: regrowth reaches the lost anatomy to ~0.05 mm, with ~1 % of the surface
+# self-intersecting (small loops at the foramina, which the genus-1 mesh cannot open).
+UNWIND_RADII = (16.0, 8.0, 4.0, 2.0, 1.0, 0.5)   # robust kernel radius per annealing stage
+UNWIND_MEMBRANE = 2.0                             # nonrigid_ICP membrane width
+UNWIND_MODEL_WEIGHT = 0.02                        # edge-term weight (0.0002-0.02 measured equivalent)
+UNWIND_CONVERGE = 0.1                             # nonrigid_ICP converge_thresh
+UNWIND_ITERS_PER_ROUND = 10                       # nonrigid_ICP iterations between edge-split passes
+UNWIND_MAX_ROUNDS = 20                            # split rounds per annealing stage
+UNWIND_SPLIT_FACTOR = 2.0                         # split edges longer than this x the starting mesh's median edge
+
+
+def _unwind_erosion(current_v, faces, target_stack, n_samples=30000):
     """Reverse-walk erosion stack to recover anatomy lost during genus-1 enforcement.
 
-    Deforms the genus-1 mesh toward each earlier erosion step via nonrigid ICP.
-    Faces are unchanged so genus stays locked. Skips iter 0 (too noisy).
+    Deforms the genus-1 mesh toward each earlier erosion step via nonrigid ICP (annealed radius, membrane), splitting
+    stretched edges between calls. Splitting only adds vertices, so the genus stays locked. Skips iter 0 (too noisy).
+
+    Returns (verts, faces, inflated2med): the refined mesh and the sparse (n_inflated x n_start) map writing each of
+    its vertices as a combination of the starting mesh's (the originals keep their indices: identity rows).
     """
+    V, F = np.asarray(current_v, np.float64), as_igl_faces(faces)
+    inflated2med = sparse.identity(len(V), format='csr')
+    max_len = UNWIND_SPLIT_FACTOR * np.median(np.linalg.norm(V[F[:, [1, 2, 0]]] - V[F], axis=2))
     _nricp_log = logging.getLogger('nonrigid_reg')
     _prev_level = _nricp_log.level
     _nricp_log.setLevel(logging.WARNING)
@@ -52,12 +74,16 @@ def _unwind_erosion(current_v, faces, target_stack, model_weight=0.0002, n_sampl
         sample_map = surface_sample(target_v, target_f, N=n_samples)[0]
         pts = sample_map @ target_v
         nrm = sample_map @ per_vertex_normals(target_v, target_f)
-        current_v = nonrigid_ICP(pts, faces, current_v,
-                                 pt_normals=nrm, model_weight=model_weight,
-                                 rad=0.001, converge_thresh=0.1)[0]
-
+        for rad in UNWIND_RADII:
+            for _ in range(UNWIND_MAX_ROUNDS):
+                fit = nonrigid_ICP(pts, F, V, pt_normals=nrm, rad=rad, membrane=UNWIND_MEMBRANE,
+                                   model_weight=UNWIND_MODEL_WEIGHT, converge_thresh=UNWIND_CONVERGE,
+                                   max_iter=UNWIND_ITERS_PER_ROUND, return_stats=True)
+                V, F, inflated2med, n_split = split_long_edges(fit.verts, F, inflated2med, max_len)
+                if n_split == 0 and fit.n_iters < UNWIND_ITERS_PER_ROUND:
+                    break
     _nricp_log.setLevel(_prev_level)
-    return current_v
+    return V, F, inflated2med
 
 
 def _trim_border(mask):
@@ -274,9 +300,10 @@ class Vertebra:
     def get_mesh_genus1(seg_vol: nib.Nifti1Image, support_pts, smoothness=1.0, offset=0.0):
         """Iterative erosion targeting genus=1 with skeleton support field.
 
-        Returns (v_small, f_small, inflated_v, inflated_f, small2med, med2small):
-        the decimated genus-1 mesh, its erosion-unwound inflated counterpart, and
-        the sparse small<->intermediate correspondence matrices.
+        Returns (v_small, f_small, inflated_v, inflated_f, small2med, med2small, inflated2med):
+        the decimated genus-1 mesh, its erosion-unwound inflated counterpart (refined where
+        the unwind stretched it), the sparse small<->intermediate correspondence matrices,
+        and the sparse inflated->intermediate rest map (identity when nothing was refined).
         """
         import time as _time
         _t0 = _time.perf_counter()
@@ -352,14 +379,15 @@ class Vertebra:
         log.debug('decimate to %d faces (intermediate)', intermediate_target)
         v_med, f_med = igl.decimate(verts, faces, intermediate_target)[1:3]
 
-        # Step 2: unwind erosion to recover lost anatomy
+        # Step 2: unwind erosion to recover lost anatomy (refines the mesh: inflated2med maps it back to v_med)
         v_inflated, f_inflated = v_med.copy(), f_med.copy()
+        inflated2med = sparse.identity(len(v_med), format='csr')
         if completed and len(mesh_stack) > 2:
-            v_inflated = _unwind_erosion(v_med.copy(), f_med, mesh_stack[:-1])
+            v_inflated, f_inflated, inflated2med = _unwind_erosion(v_med, f_med, mesh_stack[:-1])
             vol_eroded = abs(mesh_volume(v_med, f_med))
             vol_inflated = abs(mesh_volume(v_inflated, f_inflated))
-            log.info('unwind: volume %.0f → %.0f mm³ (×%.2f)',
-                     vol_eroded, vol_inflated, vol_inflated / vol_eroded)
+            log.info('unwind: volume %.0f → %.0f mm³ (×%.2f), %d → %d verts',
+                     vol_eroded, vol_inflated, vol_inflated / vol_eroded, len(v_med), len(v_inflated))
 
         # Step 3: decimate to final count
         log.debug('decimate to %d faces (final)', final_target)
@@ -375,7 +403,58 @@ class Vertebra:
         log.info('genus1 done in %.1fs: genus=%d at iter %d, %d verts %d faces',
                  _time.perf_counter() - _t0, best_genus or get_genus(verts, faces),
                  final_iter, len(v_small), len(f_small))
-        return v_small, f_small, v_inflated, f_inflated, small2med, med2small
+        return v_small, f_small, v_inflated, f_inflated, small2med, med2small, inflated2med
+
+    @staticmethod
+    def load_unwound(level_dir):
+        """Load step 02's erosion-unwound mesh and the maps that tie it to preop_gen1.ply.
+
+        preop_gen1.ply is the eroded genus-1 mesh after the final decimation: the mesh step 03 matches to the
+        template and step 04 orients. preop_gen1-inflated.ply is the intermediate-decimation mesh after the
+        erosion unwind, so its wall is the segmented cortex wherever genus-1 enforcement had eroded it; breach is
+        measured against it. small2med / med2small are the small <-> intermediate correspondences and inflated2med
+        is the unwind's rest map (n_inflated x n_med; identity rows for the intermediate mesh's own vertices).
+        Step-02 outputs written before the unwind refined the mesh have no inflated2med.npz: their mesh is
+        unrefined and the map is the identity.
+
+        :param level_dir: 02_preop/{LEVEL}/
+        :return: (inflated_v, inflated_f, small2med, med2small, inflated2med) in step 02's normalized frame
+        """
+        inflated_file = join(level_dir, 'preop_gen1-inflated.ply')
+        small2med_file = join(level_dir, 'small2med.npz')
+        med2small_file = join(level_dir, 'med2small.npz')
+        for f in (inflated_file, small2med_file, med2small_file):
+            if not isfile(f):
+                raise FileNotFoundError('missing %s — re-run step 02' % f)
+        inflated_v, inflated_f = igl.read_triangle_mesh(inflated_file)
+        small2med = sparse.load_npz(small2med_file).tocsr()
+        med2small = sparse.load_npz(med2small_file).tocsr()
+        n_med = small2med.shape[0]
+
+        inflated2med_file = join(level_dir, 'inflated2med.npz')
+        if isfile(inflated2med_file):
+            inflated2med = sparse.load_npz(inflated2med_file).tocsr()
+        elif len(inflated_v) == n_med:
+            inflated2med = sparse.identity(n_med, format='csr')
+        else:
+            raise FileNotFoundError('missing %s for a refined mesh — re-run step 02' % inflated2med_file)
+        if inflated2med.shape != (len(inflated_v), n_med):
+            raise ValueError('%s: inflated2med is %s, expected (%d, %d) — re-run step 02'
+                             % (level_dir, inflated2med.shape, len(inflated_v), n_med))
+        return inflated_v, inflated_f, small2med, med2small, inflated2med
+
+    @staticmethod
+    def load_measurement_surface(level_dir, template2bone):
+        """The surface breach is measured against: step 02's erosion-unwound mesh with the template labels on it.
+
+        :param level_dir: 02_preop/{LEVEL}/
+        :param template2bone: (n_small, n_template) sparse correspondence from step 03, sized for preop_gen1.ply
+        :return: (verts, faces, template2surface); template2surface is (n_inflated, n_template) sparse, so
+            template2surface @ label gives per-vertex label weights on the surface
+        """
+        inflated_v, inflated_f, small2med, _, inflated2med = Vertebra.load_unwound(level_dir)
+        template2surface = (inflated2med @ small2med @ sparse.csr_matrix(template2bone)).tocsr()
+        return inflated_v, inflated_f, template2surface
 
     def set_mesh(self, v, f):
         """Directly assign mesh vertices and faces (e.g. after loading from disk)."""
@@ -482,9 +561,10 @@ class Vertebra:
         """
         :param label: binary mask of a single vertebra
         :param z_up: True if z-axis points cranially, False if z-axis points caudally
-        :return: (tform, verts, faces, inflated_v, inflated_f, small2med, med2small) --
+        :return: (tform, verts, faces, inflated_v, inflated_f, small2med, med2small, inflated2med) --
             the world->normalized affine plus the normalized genus-1 mesh, its inflated
-            counterpart, and the small<->intermediate correspondence maps
+            counterpart, the small<->intermediate correspondence maps, and the
+            inflated->intermediate rest map
         """
         subvol = nonzero_box(label)
 
@@ -494,7 +574,7 @@ class Vertebra:
 
         initial_loop, support_skeleton = Vertebra.initialize_canal_loop(label_mask, subvol.affine)
 
-        verts, faces, inflated_v, inflated_f, small2med, med2small = \
+        verts, faces, inflated_v, inflated_f, small2med, med2small, inflated2med = \
             Vertebra.get_mesh_genus1(subvol, support_skeleton)
         plane, midpoint, loop_pts = fit_canal(initial_loop, verts, faces)
 
@@ -502,7 +582,7 @@ class Vertebra:
         verts = transform_points_inverse(tform, verts)
         if inflated_v is not None:
             inflated_v = transform_points_inverse(tform, inflated_v)
-        return tform, verts, faces, inflated_v, inflated_f, small2med, med2small
+        return tform, verts, faces, inflated_v, inflated_f, small2med, med2small, inflated2med
 
     @staticmethod
     def initialize_canal_loop(bin_mask, affine):

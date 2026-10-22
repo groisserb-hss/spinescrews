@@ -8,7 +8,6 @@ if not matplotlib.is_interactive():
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.patches import Polygon
-import igl
 import trimesh
 import yaml
 import pandas as pd
@@ -16,6 +15,7 @@ from scipy.interpolate import RegularGridInterpolator
 from bg3dtools.transforms_unified import transform_points_inverse
 
 from spinescrews.tools.paths import preop_level_dir, orient_level_dir, registration_level_dir, detection_dir, accuracy_dir
+from spinescrews.tools.vertebrae import Vertebra
 
 log = logging.getLogger(__name__)
 
@@ -173,8 +173,8 @@ def _load_inputs(analysis_dir, level, side, preop=False):
     ct_data = ct_img.get_fdata()
     ct_affine = ct_img.affine
 
-    # Bone mesh (genus-1 from step 02, transformed to refined frame)
-    mesh_v, mesh_f = igl.read_triangle_mesh(os.path.join(preop_ldir, 'preop_gen1.ply'))
+    # Bone mesh: the measurement surface (step 02's erosion-unwound mesh), transformed to the refined frame
+    mesh_v, mesh_f = Vertebra.load_unwound(preop_ldir)[:2]
     orig_aff = np.load(os.path.join(preop_ldir, 'preop_affine.npy'))
     refined_aff = np.load(os.path.join(o_dir, 'preop_affine-refined.npy'))
     delta = np.linalg.inv(refined_aff) @ orig_aff

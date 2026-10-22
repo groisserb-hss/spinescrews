@@ -49,13 +49,15 @@ extras **before** installing spinescrews:
 
 ```bash
 git clone https://github.com/groisserb-hss/bg3dtools.git ../bg3dtools
-git -C ../bg3dtools checkout spinescrews-1.0.1   # bg3dtools revision spinescrews 1.0.1 is pinned to (commit 756df4c)
+git -C ../bg3dtools checkout 0e6ff9d   # bg3dtools revision this spinescrews is pinned to
 pip install -e "../bg3dtools[mesh,viz,graph]"
 ```
 
-`-e` is an "editable" install. spinescrews 1.0.1 was frozen against bg3dtools tag `spinescrews-1.0.1` (commit `756df4c`),
-and the `checkout` above pins that revision for a reproducible build. To track a newer bg3dtools
-instead, `git pull` inside `../bg3dtools/` and the editable install picks it up in place.
+`-e` is an "editable" install. The `checkout` above pins bg3dtools commit `0e6ff9d` for a reproducible build:
+the erosion unwind (step 02) needs its `nonrigid_ICP` with the membrane regulariser in the solve. The spinescrews
+1.0.1 release was frozen against the older bg3dtools tag `spinescrews-1.0.1` (commit `756df4c`); check that out
+instead when building 1.0.1. To track a newer bg3dtools, `git pull` inside `../bg3dtools/` and the editable install
+picks it up in place.
 
 ### 5. Install spinescrews
 

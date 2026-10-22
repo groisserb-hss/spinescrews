@@ -166,12 +166,13 @@ class Aligner:
                 affine = np.load(join(preop_level_dir(self.analysis_dir, neighb_above), 'preop_affine.npy'))
             else:
                 # orient to inferior end-plate of segmented vertebra (transform in real-world coordinates)
-                affine, verts_g1, faces_g1, inflated_v, inflated_f, small2med, med2small = \
+                affine, verts_g1, faces_g1, inflated_v, inflated_f, small2med, med2small, inflated2med = \
                     Vertebra.normalize_orientation(label_world)
                 igl.write_triangle_mesh(join(level_dir, 'preop_gen1.ply'), verts_g1, faces_g1)
                 igl.write_triangle_mesh(join(level_dir, 'preop_gen1-inflated.ply'), inflated_v, inflated_f)
                 sparse.save_npz(join(level_dir, 'small2med.npz'), small2med)
                 sparse.save_npz(join(level_dir, 'med2small.npz'), med2small)
+                sparse.save_npz(join(level_dir, 'inflated2med.npz'), inflated2med)
 
             # verify that detected vertebra is close to corresponding screw plan
             screws = [S for S in self.screws if S.level == level_name]
@@ -336,6 +337,19 @@ class Aligner:
             inflated_v, inflated_f = igl.read_triangle_mesh(inflated_file)
             small2med = sparse.load_npz(small2med_file)
             med2small = sparse.load_npz(med2small_file)
+            n_med = small2med.shape[0]
+            # the unwind refines the inflated mesh (appending vertices); inflated2med maps it back to the
+            # intermediate mesh. Step-02 outputs from before refinement have no such file and an unrefined mesh.
+            inflated2med_file = join(level_dir, 'inflated2med.npz')
+            if isfile(inflated2med_file):
+                inflated2med = sparse.load_npz(inflated2med_file)
+            elif len(inflated_v) == n_med:
+                inflated2med = sparse.identity(n_med, format='csr')
+            else:
+                raise FileNotFoundError(f'missing inflated2med.npz for refined {level_name} mesh — re-run step 02')
+            if inflated2med.shape != (len(inflated_v), n_med):
+                raise ValueError(f'{level_name}: inflated2med is {inflated2med.shape}, expected '
+                                 f'({len(inflated_v)}, {n_med}) — re-run step 02')
 
             # inflated↔raw correspondence
             _, fidx, bc = surface_match(raw_v, inflated_v, inflated_f)
@@ -343,9 +357,9 @@ class Aligner:
             _, fidx, bc = surface_match(inflated_v, raw_v, raw_f)
             raw2inflated = bc2sparse(raw_f, fidx, bc, nV=len(raw_v))
 
-            # Compose full chain
-            template2seg = inflated2raw @ small2med @ template_2_gen1
-            seg2template = gen1_2_template @ med2small @ raw2inflated
+            # Compose full chain (the original intermediate vertices are the inflated mesh's first n_med)
+            template2seg = inflated2raw @ inflated2med @ small2med @ template_2_gen1
+            seg2template = gen1_2_template @ med2small @ raw2inflated.tocsr()[:n_med]   # bc2sparse gives COO
 
             nnz_per_row = template2seg.getnnz(axis=1)
             coverage = np.count_nonzero(nnz_per_row) / len(nnz_per_row)
